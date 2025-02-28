@@ -1,7 +1,23 @@
+/* General styles */
 .App {
   text-align: center;
 }
 
+/* Background Image */
+.background-container {
+  position: fixed; /* Fijar la imagen en la pantalla */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("../assets/background.png"); /* Asegúrate de que la ruta sea correcta */
+  background-size: 50%; /* Ajusta la imagen para que cubra el área */
+  background-position: center; /* Centra la imagen */
+  background-repeat: no-repeat; /* Evita la repetición */
+  z-index: -1; /* Envía el fondo detrás de otros elementos */
+}
+
+/* Logo animations and styles */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -13,21 +29,6 @@
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -35,4 +36,23 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Header styles */
+.App-header {
+  background-color: rgba(40, 44, 52, 0.8); /* Añadir transparencia para que se vea mejor */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  position: relative; /* Para que se vea sobre la imagen */
+  z-index: 1;
+}
+
+/* Link styles */
+.App-link {
+  color: #61dafb;
 }
