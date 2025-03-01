@@ -5,8 +5,15 @@ const ProductList = ({ products, onAddToCart }) => {
     <div className="product-list">
       {products.map((product) => (
         <div key={product.id} className="product-item">
-          <span>{product.name} - ${product.price}</span>
-          <button onClick={() => onAddToCart(product)}>Agregar</button>
+          {/* Contenedor de la imagen */}
+          <div className="product-image">
+            <img src={product.image} alt={product.name} />
+          </div>
+          <div className="product-details">
+            <span className="product-name">{product.name}</span>
+            <span className="product-price">${product.price}</span>
+            <button onClick={() => onAddToCart(product)}>Agregar</button>
+          </div>
         </div>
       ))}
     </div>
