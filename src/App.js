@@ -35,10 +35,10 @@ const cartReducer = (state, action) => {
       const itemInCart = state.find((item) => item.id === action.payload.id);
       return itemInCart
         ? state.map((item) =>
-            item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          )
+          item.id === action.payload.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
         : [...state, { ...action.payload, quantity: 1 }];
 
     case "REMOVE_ITEM":
@@ -85,7 +85,7 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState('landing');
 
-  const calculateTotal = () => 
+  const calculateTotal = () =>
     cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
@@ -95,7 +95,7 @@ const App = () => {
       </div>
 
       {currentView === 'landing' && (
-        <Landing 
+        <Landing
           onStartOrder={() => setCurrentView('menu')}
           onContact={() => setCurrentView('contactos')}
           onAbout={() => setCurrentView('quienes-somos')}
@@ -106,18 +106,15 @@ const App = () => {
         {currentView === 'menu' && (
           <>
             {/* Botón de volver agregado */}
-            <button 
-              className="back-btn" 
+            <button
+              className="back-btn"
               onClick={() => setCurrentView('landing')}
             >
               ← Volver al menú principal
             </button>
-            
-           
-            
             <Menu products={products} cart={cart} dispatch={dispatch} />
-            <button 
-              className="open-modal-btn" 
+            <button
+              className="open-modal-btn"
               onClick={() => setIsModalOpen(true)}
             >
               Ver Pedido (${calculateTotal()})
@@ -127,8 +124,8 @@ const App = () => {
 
         {(currentView === 'contactos' || currentView === 'quienes-somos') && (
           <>
-            <button 
-              className="back-btn" 
+            <button
+              className="back-btn"
               onClick={() => setCurrentView('landing')}
             >
               ← Volver
