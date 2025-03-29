@@ -10,8 +10,11 @@ const CartModal = ({ cart, dispatch, onClose, total }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div className="modal-overlay" role="dialog"
+      aria-labelledby="modal-title"
+      onClick={onClose}>
+      <div className="modal" role="document"
+        onClick={(e) => e.stopPropagation()} >
         <h2>Tu Pedido</h2>
         <ul>
           {cart.map((item) => (
@@ -31,7 +34,7 @@ const CartModal = ({ cart, dispatch, onClose, total }) => {
         <h3>Total: ${total}</h3>
         <button onClick={onClose}>Cerrar</button>
       </div>
-    </div>
+    </div >
   );
 };
 

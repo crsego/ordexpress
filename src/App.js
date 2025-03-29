@@ -1,40 +1,63 @@
-import React, { useState, useReducer, Suspense } from "react";
+import React, { useState, useReducer, Suspense, useMemo } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 import logo from "./assets/ordexpress.png";
 
-// Componentes
+// Componentes lazy-loaded
 const Menu = React.lazy(() => import("./components/Menu"));
-const Cart = React.lazy(() => import("./components/Cart"));
+const CartModal = React.lazy(() => import("./components/Cart"));
 
-const Landing = ({ onStartOrder, onContact, onAbout }) => (
+// Helpers
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+// Componentes de vistas
+const Landing = () => (
   <div className="landing">
-    <button onClick={onStartOrder}>Haz tu pedido</button>
-    <button onClick={onContact}>Contactos</button>
-    <button onClick={onAbout}>Quienes somos</button>
+    <Link to="/menu"><button>Haz tu pedido</button></Link>
+    <Link to="/contactos"><button>Contactos</button></Link>
+    <Link to="/about"><button>Quienes somos</button></Link>
   </div>
 );
 
 const Contactos = () => (
-  <div className="contact-view">
-    <h2>Contactanos</h2>
-    <p>Tel: +57 123 456 789</p>
-    <p>Email: info@ordexpress.com</p>
-  </div>
+  <>
+    <button className="back-btn" onClick={() => window.history.back()}>
+      ← Volver al menú principal
+    </button>
+    <div className="contact-view">
+      <h2>Contactanos</h2>
+      <p>Tel: +57 123 456 789</p>
+      <p>Email: info@ordexpress.com</p>
+    </div>
+  </>
 );
 
 const QuienesSomos = () => (
-  <div className="about-view">
-    <h2>Sobre Nosotros</h2>
-    <p>Restaurante Ordexpress - Calidad y sabor desde 1995</p>
-  </div>
+  <>
+    <button className="back-btn" onClick={() => window.history.back()}>
+      ← Volver al menú principal
+    </button>
+    <div className="about-view">
+      <h2>Sobre Nosotros</h2>
+      <p>Restaurante Ordexpress - Calidad y sabor desde 1995</p>
+    </div>
+  </>
 );
 
+// Reducer del carrito
 const cartReducer = (state, action) => {
   switch (action.type) {
     case "ADD_ITEM":
-      const itemInCart = state.find((item) => item.id === action.payload.id);
+      const itemInCart = state.find(item => item.id === action.payload.id);
       return itemInCart
-        ? state.map((item) =>
+        ? state.map(item =>
           item.id === action.payload.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
@@ -42,20 +65,23 @@ const cartReducer = (state, action) => {
         : [...state, { ...action.payload, quantity: 1 }];
 
     case "REMOVE_ITEM":
-      return state.filter((item) => item.id !== action.payload.id);
+      return state.filter(item => item.id !== action.payload.id);
 
     case "UPDATE_QUANTITY":
-      return state.map((item) =>
-        item.id === action.payload.id
-          ? { ...item, quantity: action.payload.quantity }
-          : item
-      );
+      return action.payload.quantity > 0
+        ? state.map(item =>
+          item.id === action.payload.id
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        )
+        : state.filter(item => item.id !== action.payload.id);
 
     default:
       return state;
   }
 };
 
+// Datos de productos
 const products = {
   entrada: [
     { id: 1, name: "Ensalada César", price: 8000, image: require("./assets/images/ensaladaCesar.avif") },
@@ -80,71 +106,63 @@ const products = {
   ],
 };
 
+// Componente principal
 const App = () => {
   const [cart, dispatch] = useReducer(cartReducer, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('landing');
+  const total = useMemo(() =>
+    cart.reduce((total, item) => total + item.price * item.quantity, 0),
+    [cart]
+  );
 
-  const calculateTotal = () =>
-    cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const MenuView = () => {
+    return (
+      <>
+        <button className="back-btn" onClick={() => window.history.back()}>
+          ← Volver al menú principal
+        </button>
+
+        <Suspense fallback={<div>Cargando menú...</div>}>
+          <Menu products={products} cart={cart} dispatch={dispatch} />
+        </Suspense>
+
+        <button
+          className="open-modal-btn"
+          onClick={() => setIsModalOpen(true)}
+        >
+          Ver Pedido ({formatCurrency(total)})
+        </button>
+      </>
+    );
+  };
 
   return (
-    <div className="app">
-      <div className="logo-container">
-        <img src={logo} alt="Logo" className="logo" />
+    <Router>
+      <div className="app">
+        <div className="logo-container">
+          <img src={logo} alt="Logo" className="logo" />
+        </div>
+
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/menu" element={<MenuView />} />
+          <Route path="/contactos" element={<Contactos />} />
+          <Route path="/about" element={<QuienesSomos />} />
+        </Routes>
+
+        <Suspense fallback={<div>Cargando carrito...</div>}>
+          {isModalOpen && (
+            <CartModal
+              cart={cart}
+              dispatch={dispatch}
+              onClose={() => setIsModalOpen(false)}
+              total={total}
+              formatCurrency={formatCurrency}
+            />
+          )}
+        </Suspense>
       </div>
-
-      {currentView === 'landing' && (
-        <Landing
-          onStartOrder={() => setCurrentView('menu')}
-          onContact={() => setCurrentView('contactos')}
-          onAbout={() => setCurrentView('quienes-somos')}
-        />
-      )}
-
-      <Suspense fallback={<div>Cargando...</div>}>
-        {currentView === 'menu' && (
-          <>
-            {/* Botón de volver agregado */}
-            <button
-              className="back-btn"
-              onClick={() => setCurrentView('landing')}
-            >
-              ← Volver al menú principal
-            </button>
-            <Menu products={products} cart={cart} dispatch={dispatch} />
-            <button
-              className="open-modal-btn"
-              onClick={() => setIsModalOpen(true)}
-            >
-              Ver Pedido (${calculateTotal()})
-            </button>
-          </>
-        )}
-
-        {(currentView === 'contactos' || currentView === 'quienes-somos') && (
-          <>
-            <button
-              className="back-btn"
-              onClick={() => setCurrentView('landing')}
-            >
-              ← Volver
-            </button>
-            {currentView === 'contactos' && <Contactos />}
-            {currentView === 'quienes-somos' && <QuienesSomos />}
-          </>
-        )}
-
-        {isModalOpen && (
-          <Cart
-            cart={cart}
-            dispatch={dispatch}
-            onClose={() => setIsModalOpen(false)}
-            total={calculateTotal()}
-          />
-        )}
-      </Suspense>
-    </div>
+    </Router>
   );
 };
 

@@ -7,7 +7,8 @@ const ProductList = ({ products, onAddToCart }) => {
         <div key={product.id} className="product-item">
           {/* Contenedor de la imagen */}
           <div className="product-image">
-            <img src={product.image} alt={product.name} />
+            <img src={product.image} alt={product.name} loading="lazy"
+              style={{ aspectRatio: '1/1' }} />
           </div>
           <div className="product-details">
             <span className="product-name">{product.name}</span>
