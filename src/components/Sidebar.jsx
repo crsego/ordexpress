@@ -9,6 +9,7 @@ function Sidebar({ onLogout }) {
   const handleLogoutClick = () => {
     if (onLogout) {
       onLogout();
+      navigate('/login');
     }
   };
   return (
