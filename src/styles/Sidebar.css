@@ -1,0 +1,133 @@
+/* src/components/Sidebar.css */
+
+.sidebar {
+    width: 240px;
+    /* Ancho fijo */
+    background-color: #e9d8a6;
+    /* Un tono más oscuro del fondo original */
+    padding: 20px 15px;
+    height: 100vh;
+    /* Altura completa */
+    position: fixed;
+    /* Fija en la pantalla */
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    /* Scroll si hay muchos enlaces */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    /* Sombra para separarla */
+    z-index: 10;
+    /* Asegura que esté por encima */
+}
+
+.sidebar-title {
+    font-size: 1.8rem;
+    /* Tamaño adecuado para el título de la sidebar */
+    color: white;
+    /* Mantenemos el rojo */
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar nav ul {
+    list-style: none;
+    /* Quita los puntos de la lista */
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar nav li {
+    margin-bottom: 8px;
+    /* Espacio entre enlaces */
+}
+
+.sidebar nav a {
+    display: block;
+    /* Ocupa todo el ancho del li */
+    padding: 12px 15px;
+    color: #495057;
+    /* Color de texto oscuro pero no negro */
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar nav a:hover {
+    background-color: #f0ad4e;
+    /* Naranja al pasar el mouse */
+    color: white;
+}
+
+.sidebar nav a.active-link {
+    background-color: #ea9e33;
+    /* Rojo para el enlace activo */
+    color: white;
+    font-weight: 600;
+}
+
+.sidebar-logout {
+    margin-top: 30px; /* Espacio arriba del botón */
+    padding-top: 20px; /* Espacio extra */
+    border-top: 1px solid rgba(0, 0, 0, 0.1); /* Línea separadora */
+  }
+  
+  .logout-button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background-color: #d9534f; /* Rojo para logout */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.2s ease;
+  }
+  
+  .logout-button:hover {
+    background-color: #c9302c; /* Rojo más oscuro */
+  }
+/* Responsividad para la Sidebar (opcional: ocultar en móvil) */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        /* Ocupa todo el ancho */
+        height: auto;
+        /* Altura automática */
+        position: static;
+        /* Vuelve al flujo normal del documento */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 0;
+    }
+
+    .sidebar-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    /* Puedes hacer que los links se muestren horizontalmente si prefieres */
+    .sidebar nav ul {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        /* Para que se ajusten si no caben */
+        gap: 5px;
+    }
+
+    .sidebar nav li {
+        margin-bottom: 0;
+    }
+
+    .sidebar nav a {
+        padding: 8px 12px;
+        /* Más pequeños para móvil */
+        font-size: 0.9rem;
+    }
+}

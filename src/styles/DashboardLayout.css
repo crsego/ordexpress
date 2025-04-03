@@ -1,0 +1,274 @@
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    /* Asegura que ocupa toda la altura */
+    background-color: #f8f9fa;
+    /* Un fondo más neutro para el admin */
+}
+
+.dashboard-content {
+    flex: 1;
+    /* Ocupa el espacio restante */
+    padding: 30px;
+    /* Espacio interno generoso */
+    overflow-y: auto;
+    /* Permite scroll si el contenido es largo */
+    background-color: #ffffff;
+    /* Fondo blanco para el área de contenido */
+    margin-left: 260px;
+    /* Deja espacio para la sidebar fija (ancho + margen) */
+}
+
+/* Estilos generales para las páginas dentro del dashboard */
+.dashboard-content h2 {
+    font-size: 2rem;
+    /* Ligeramente más pequeño que el h1 principal */
+    color: #d9534f;
+    /* Mantenemos el color rojo llamativo */
+    margin-bottom: 25px;
+    font-weight: 600;
+    /* Un poco menos pesado que el h1 */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 2px solid #f0ad4e;
+    /* Línea inferior con color naranja */
+    padding-bottom: 10px;
+    text-align: left;
+    /* Alineación izquierda para títulos de página */
+}
+
+.dashboard-content h3 {
+    font-size: 1.5rem;
+    color: #333;
+    /* Un color más estándar para subtítulos */
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-align: left;
+}
+
+/* --- Estilos para Tablas --- */
+.dashboard-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    border-radius: 8px;
+    /* Bordes redondeados para la tabla */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    /* Sombra sutil */
+    overflow: hidden;
+    /* Para que el border-radius afecte a los bordes */
+}
+
+.dashboard-content th,
+.dashboard-content td {
+    padding: 12px 15px;
+    /* Buen espaciado */
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    /* Separador de filas más suave */
+    vertical-align: middle;
+    /* Alineación vertical centrada */
+}
+
+.dashboard-content thead th {
+    background-color: #f8f4e5;
+    /* Un beige muy claro, como en el modal */
+    color: #333;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dashboard-content tbody tr:hover {
+    background-color: #f1f3f5;
+    /* Hover suave */
+}
+
+/* Estilo para filas que se están actualizando */
+.dashboard-content tbody tr.updating {
+    opacity: 0.7;
+    pointer-events: none;
+    /* Evita interacciones mientras actualiza */
+    background-color: #fff9db;
+    /* Un amarillo muy pálido */
+}
+
+/* --- Estilos para Formularios --- */
+.dashboard-content form {
+    background-color: #f8f4e5;
+    /* Fondo similar al modal */
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    /* Flexbox para alinear elementos */
+    flex-wrap: wrap;
+    /* Permitir que los elementos pasen a la siguiente línea */
+    gap: 15px;
+    /* Espacio entre elementos del formulario */
+    align-items: flex-end;
+    /* Alinear elementos en la parte inferior */
+}
+
+.dashboard-content form input[type="text"],
+.dashboard-content form input[type="number"],
+.dashboard-content form input[type="email"],
+/* Añadir otros tipos si los necesitas */
+.dashboard-content form select {
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    /* Borde estándar */
+    border-radius: 5px;
+    font-family: "Poppins", sans-serif;
+    font-size: 1rem;
+    flex: 1;
+    /* Permite que los inputs crezcan */
+    min-width: 150px;
+    /* Ancho mínimo para evitar que se aplasten */
+    box-sizing: border-box;
+}
+
+.dashboard-content form input:focus,
+.dashboard-content form select:focus {
+    outline: none;
+    border-color: #f0ad4e;
+    /* Color naranja en foco */
+    box-shadow: 0 0 0 2px rgba(240, 173, 78, 0.25);
+    /* Sombra sutil en foco */
+}
+
+.dashboard-content form button[type="submit"] {
+    padding: 10px 25px;
+    /* Padding ajustado */
+    background-color: #5cb85c;
+    /* Botón verde para añadir/guardar */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    height: 42px;
+    /* Misma altura que los inputs */
+}
+
+.dashboard-content form button[type="submit"]:hover {
+    background-color: #4cae4c;
+    /* Verde más oscuro */
+}
+
+.dashboard-content form button:disabled {
+    background-color: #a5d6a7;
+    /* Verde más pálido */
+    cursor: not-allowed;
+}
+
+/* --- Estilos para Selectores de Acción en Tablas --- */
+.dashboard-content td select {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.9rem;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.dashboard-content td select:hover {
+    border-color: #adb5bd;
+}
+
+.dashboard-content td select:focus {
+    outline: none;
+    border-color: #5bc0de;
+    /* Azul claro para selectores */
+    box-shadow: 0 0 0 2px rgba(91, 192, 222, 0.25);
+}
+
+.dashboard-content td select:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* --- Utilidades --- */
+.error-message {
+    color: #d9534f;
+    /* Rojo */
+    background-color: #f8d7da;
+    /* Fondo rosa pálido */
+    border: 1px solid #f5c6cb;
+    /* Borde rosa */
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.loading-spinner {
+    /* (Define tu estilo de spinner aquí si usas uno personalizado) */
+    /* Ejemplo simple: */
+    display: block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f0ad4e;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 50px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Media Queries para Responsividad --- */
+@media (max-width: 768px) {
+    .dashboard-layout {
+        flex-direction: column;
+        /* Sidebar arriba en pantallas pequeñas */
+    }
+
+    .dashboard-content {
+        margin-left: 0;
+        /* Sin margen cuando la sidebar está arriba o oculta */
+        padding: 15px;
+        /* Menos padding en móvil */
+    }
+
+    /* (Añade aquí estilos para ocultar/mostrar la sidebar con un botón si lo deseas) */
+
+    .dashboard-content h2 {
+        font-size: 1.6rem;
+    }
+
+    .dashboard-content h3 {
+        font-size: 1.3rem;
+    }
+
+    /* Ajustar formulario en móvil */
+    .dashboard-content form {
+        flex-direction: column;
+        align-items: stretch;
+        /* Estirar elementos a lo ancho */
+    }
+
+    .dashboard-content form input,
+    .dashboard-content form select,
+    .dashboard-content form button {
+        min-width: auto;
+        /* Quitar ancho mínimo */
+        width: 100%;
+        /* Ocupar todo el ancho disponible */
+    }
+}

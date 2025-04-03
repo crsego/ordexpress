@@ -1,0 +1,123 @@
+.login-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f4e3a7; /* Fondo cálido como en App.css */
+    padding: 20px;
+    font-family: "Poppins", Arial, sans-serif; /* Asegura la fuente */
+  }
+  
+  .login-form-card {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px; /* Ancho máximo del formulario */
+    text-align: center;
+  }
+  
+  .login-logo {
+    width: 180px; /* Tamaño ajustado para el login */
+    height: auto;
+    margin-bottom: 20px;
+    /* Puedes reusar la clase .logo si importas App.css globalmente */
+    /* O copiar los estilos relevantes */
+    cursor: default; /* No necesita ser clickeable aquí */
+    transition: transform 0.3s ease;
+  }
+  /* Opcional: reutiliza el hover si quieres */
+  /* .login-logo:hover {
+    transform: scale(1.05);
+  } */
+  
+  
+  .login-form-card h2 {
+    font-size: 1.8rem; /* Tamaño adecuado para el título del login */
+    color: #d9534f; /* Rojo llamativo */
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+    text-align: left; /* Alinea labels e inputs a la izquierda */
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box; /* Importante para que el padding no aumente el ancho */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #f0ad4e; /* Naranja al enfocar */
+    box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.2);
+  }
+  
+  .form-group input::placeholder {
+    color: #aaa;
+  }
+  
+  /* Hereda .error-message de los estilos generales si los importas, sino defínelo */
+  .login-error { /* Estilo específico por si acaso o para ajustes */
+    margin-top: 0; /* Ajusta el margen si es necesario */
+    margin-bottom: 15px;
+    text-align: center; /* Centra el texto del error */
+  }
+  
+  .login-button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #f0ad4e; /* Botón naranja */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem; /* Ligeramente más grande */
+    font-weight: 600;
+    margin-top: 10px; /* Espacio antes del botón */
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #ec971f; /* Naranja más oscuro */
+  }
+  
+  .login-button:disabled {
+    background-color: #f8c989; /* Naranja más pálido */
+    cursor: not-allowed;
+  }
+  
+  .login-button:active:not(:disabled) {
+      transform: scale(0.98); /* Efecto de clic */
+  }
+  
+  .forgot-password {
+    margin-top: 15px;
+    font-size: 0.9rem;
+  }
+  
+  .forgot-password a {
+    color: #5bc0de; /* Azul claro para enlaces */
+    text-decoration: none;
+  }
+  
+  .forgot-password a:hover {
+    text-decoration: underline;
+  }

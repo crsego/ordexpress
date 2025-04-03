@@ -1,13 +1,18 @@
-import React, { useState, useReducer, Suspense, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import React, { useState, useReducer, Suspense, useMemo, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import DashboardLayout from './pages/DashboardLayout';
+import OrderManagementPage from './pages/OrderManagementPage';
+import InventoryManagementPage from './pages/InventoryManagementPage';
+import TableManagementPage from './pages/TableManagementPage';
+import LoginPage from './pages/LoginPage';
 import "./App.css";
 import logo from "./assets/ordexpress.png";
 
-// Componentes lazy-loaded
+
 const Menu = React.lazy(() => import("./components/Menu"));
 const CartModal = React.lazy(() => import("./components/Cart"));
 
-// Helpers
+
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -110,10 +115,37 @@ const products = {
 const App = () => {
   const [cart, dispatch] = useReducer(cartReducer, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Intenta leer el estado de autenticación de localStorage
+    // Esto es una forma simple de persistencia, JWT es más seguro/completo
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
+
+  // Guarda el estado en localStorage cuando cambie
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated);
+  }, [isAuthenticated]);
   const total = useMemo(() =>
     cart.reduce((total, item) => total + item.price * item.quantity, 0),
     [cart]
   );
+
+  const handleLoginSuccess = (userData) => {
+    console.log("Login successful in App component", userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('isAuthenticated');
+  };
+
+  function ProtectedRoute({ isAuthenticated, children }) {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  }
 
   const MenuView = () => {
     return (
@@ -145,6 +177,25 @@ const App = () => {
 
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <DashboardLayout onLogout={handleLogout} />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="orders" />} />
+            <Route path="orders" element={<OrderManagementPage />} />
+            <Route path="inventory" element={<InventoryManagementPage />} />
+            <Route path="tables" element={<TableManagementPage />} />
+          </Route>
           <Route path="/menu" element={<MenuView />} />
           <Route path="/contactos" element={<Contactos />} />
           <Route path="/about" element={<QuienesSomos />} />
