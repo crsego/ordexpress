@@ -4,6 +4,7 @@ import DashboardLayout from './pages/DashboardLayout';
 import OrderManagementPage from './pages/OrderManagementPage';
 import InventoryManagementPage from './pages/InventoryManagementPage';
 import TableManagementPage from './pages/TableManagementPage';
+import OrganizationManagementPage from './pages/OrganizationManagementPage';
 import LoginPage from './pages/LoginPage';
 import "./App.css";
 import logo from "./assets/ordexpress.png";
@@ -195,6 +196,7 @@ const App = () => {
             <Route path="orders" element={<OrderManagementPage />} />
             <Route path="inventory" element={<InventoryManagementPage />} />
             <Route path="tables" element={<TableManagementPage />} />
+            <Route path="organizations" element={<OrganizationManagementPage />} />
           </Route>
           <Route path="/menu" element={<MenuView />} />
           <Route path="/contactos" element={<Contactos />} />

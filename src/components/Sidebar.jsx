@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css'; // Para estilos
 
 function Sidebar({ onLogout }) {
-
   const navigate = useNavigate();
 
   const handleLogoutClick = () => {
@@ -12,6 +11,7 @@ function Sidebar({ onLogout }) {
       navigate('/login');
     }
   };
+
   return (
     <aside className="sidebar">
       <h1 className="sidebar-title">OrdExpress Admin</h1>
@@ -32,7 +32,13 @@ function Sidebar({ onLogout }) {
               Gestión de Mesas
             </NavLink>
           </li>
-          {/* Puedes añadir más enlaces aquí (Usuarios, Reportes, Configuración, etc.) */}
+          {/* Nuevo enlace para la gestión de organizaciones */}
+          <li>
+            <NavLink to="/admin/organizations" className={({ isActive }) => isActive ? 'active-link' : ''}>
+              Gestión de Organizaciones
+            </NavLink>
+          </li>
+          {/* Puedes añadir más enlaces aquí */}
         </ul>
       </nav>
       <div className="sidebar-logout">

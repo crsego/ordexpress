@@ -1,122 +1,216 @@
 import React, { useState, useEffect } from 'react';
-//import LoadingSpinner from '../components/LoadingSpinner';
-// import { fetchInventory, addInventoryItem } from '../api/inventory';
-
-// Mock Data & API
-const mockInventory = [
-  { id: 'I001', name: 'Hamburguesa Clásica', category: 'Comida', stock: 50, price: 15000 },
-  { id: 'I002', name: 'Gaseosa 350ml', category: 'Bebida', stock: 100, price: 3000 },
-  { id: 'I003', name: 'Papas Fritas (Porción)', category: 'Acompañamiento', stock: 80, price: 5000 },
-];
-
-const fetchInventory = async () => {
-  console.log("Fetching inventory...");
-  await new Promise(resolve => setTimeout(resolve, 400));
-  console.log("Inventory fetched.");
-  return mockInventory;
-};
-
-const addInventoryItem = async (itemData) => {
-  console.log("Adding inventory item:", itemData);
-  await new Promise(resolve => setTimeout(resolve, 600));
-  const newItem = { ...itemData, id: `I${Math.random().toString(16).slice(2, 6)}`, stock: parseInt(itemData.stock, 10) || 0, price: parseFloat(itemData.price) || 0 }; // Genera ID simple y parsea números
-  mockInventory.push(newItem); // Añade al mock data
-  console.log("Item added to mock data.");
-  return newItem;
-};
+import axios from 'axios';
+import '../App.css'; // Asegúrate de que este import esté presente
 
 function InventoryManagementPage() {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isAdding, setIsAdding] = useState(false); // Estado para el formulario
-  const [newItem, setNewItem] = useState({ name: '', category: '', stock: '', price: '' });
+  const [isAdding, setIsAdding] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', stock: '', price: '' });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const organizationId = 1; // Reemplaza con la forma correcta de obtener el ID de la organización
 
   useEffect(() => {
     setLoading(true);
-    fetchInventory()
-      .then(data => setInventory(data))
-      .catch(err => setError("Error al cargar el inventario."))
+    axios.get('https://localhost:8080/api/Productos') // Reemplaza con la URL de tu API
+      .then(response => {
+        setInventory(response.data);
+      })
+      .catch(err => {
+        setError("Error al cargar el inventario.");
+        console.error("Error fetching inventory:", err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewItem(prev => ({ ...prev, [name]: value }));
+    if (isEditing && editingItem) {
+      setEditingItem(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleAddItem = async (e) => {
     e.preventDefault();
-    if (!newItem.name || !newItem.category || !newItem.stock || !newItem.price) {
-      alert("Por favor completa todos los campos.");
+    if (!newItem.name || !newItem.stock || !newItem.price) {
+      alert("Por favor completa el nombre, stock y precio.");
       return;
     }
-    setIsAdding(true); // Muestra feedback de carga
+    setIsAdding(true);
     setError(null);
 
     try {
-      const addedItem = await addInventoryItem(newItem);
-      setInventory(prevInventory => [...prevInventory, addedItem]); // Añade el nuevo ítem a la lista
-      setNewItem({ name: '', category: '', stock: '', price: '' }); // Limpia el formulario
+      const response = await axios.post('https://localhost:8080/api/Productos', {
+        nombre: newItem.name,
+        stock: parseInt(newItem.stock, 10) || 0,
+        precio: parseFloat(newItem.price) || 0,
+        organizationId: organizationId
+      });
+      setInventory(prevInventory => [...prevInventory, response.data]);
+      setNewItem({ name: '', stock: '', price: '' });
       alert("Ítem añadido correctamente!");
     } catch (err) {
-      console.error("Error adding item:", err);
       setError("Error al añadir el ítem. Intente de nuevo.");
+      console.error("Error adding item:", err);
     } finally {
-      setIsAdding(false); // Oculta feedback de carga
+      setIsAdding(false);
     }
   };
 
-  //if (loading) return <LoadingSpinner />;
-  if (error && !isAdding) return <div className="error-message">{error}</div>; // No mostrar error de carga si estamos añadiendo
+  const handleEditItem = (item) => {
+    setIsEditing(true);
+    setEditingItem({ ...item });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingItem(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem.nombre || editingItem.stock === null || editingItem.precio === null) {
+      alert("Por favor completa el nombre, stock y precio.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      await axios.put(`https://localhost:8080/api/Productos/${editingItem.id}`, {
+        id: editingItem.id,
+        nombre: editingItem.nombre,
+        stock: parseInt(editingItem.stock, 10) || 0,
+        precio: parseFloat(editingItem.precio) || 0,
+        organizationId: organizationId
+      });
+      const updatedInventory = inventory.map(item =>
+        item.id === editingItem.id ? { ...editingItem } : item
+      );
+      setInventory(updatedInventory);
+      setIsEditing(false);
+      setEditingItem(null);
+      alert("Ítem actualizado correctamente!");
+    } catch (err) {
+      setError("Error al actualizar el ítem. Intente de nuevo.");
+      console.error("Error updating item:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
+      setLoading(true);
+      setError(null);
+      try {
+        await axios.delete(`https://localhost:8080/api/Productos/${itemId}`);
+        setInventory(prevInventory => prevInventory.filter(item => item.id !== itemId));
+        alert("Ítem eliminado correctamente!");
+      } catch (err) {
+        setError("Error al eliminar el ítem. Intente de nuevo.");
+        console.error("Error deleting item:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  if (loading) return <p>Cargando inventario...</p>;
+  if (error && !isAdding && !isEditing) return <div className="error-message">{error}</div>;
 
   return (
     <div>
       <h2>Gestión de Inventario</h2>
 
       {/* Formulario para añadir ítem */}
-      <h3>Añadir Nuevo Ítem</h3>
-      <form onSubmit={handleAddItem}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Nombre del Ítem"
-          value={newItem.name}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="text"
-          name="category"
-          placeholder="Categoría"
-          value={newItem.category}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="number"
-          name="stock"
-          placeholder="Stock Inicial"
-          value={newItem.stock}
-          onChange={handleInputChange}
-          required
-          min="0"
-        />
-        <input
-          type="number"
-          name="price"
-          placeholder="Precio (COP)"
-          value={newItem.price}
-          onChange={handleInputChange}
-          required
-          min="0"
-          step="50" // O el paso que prefieras
-        />
-        <button type="submit" disabled={isAdding}>
-          {isAdding ? 'Añadiendo...' : 'Añadir Ítem'}
-        </button>
-        {error && isAdding && <p className="error-message" style={{ color: 'red', marginLeft: '10px' }}>{error}</p>}
-      </form>
+      <div className="add-item-container">
+        <h3>Añadir Nuevo Ítem</h3>
+        {!isEditing && (
+          <form onSubmit={handleAddItem} className="add-item-form">
+            <input
+              type="text"
+              name="name"
+              placeholder="Nombre del Ítem"
+              value={newItem.name}
+              onChange={handleInputChange}
+              required
+              className="inventory-input"
+            />
+            <input
+              type="number"
+              name="stock"
+              placeholder="Stock Inicial"
+              value={newItem.stock}
+              onChange={handleInputChange}
+              required
+              min="0"
+              className="inventory-input"
+            />
+            <input
+              type="number"
+              name="price"
+              placeholder="Precio (COP)"
+              value={newItem.price}
+              onChange={handleInputChange}
+              required
+              min="0"
+              step="50"
+              className="inventory-input"
+            />
+            <button type="submit" disabled={isAdding} className="inventory-button save-button">
+              {isAdding ? 'Añadiendo...' : 'Añadir Ítem'}
+            </button>
+            {error && isAdding && <p className="error-message" style={{ color: 'red', marginLeft: '10px' }}>{error}</p>}
+          </form>
+        )}
+      </div>
+
+      {/* Formulario para editar ítem */}
+      {isEditing && editingItem && (
+        <div className="edit-item-container">
+          <h3>Editar Ítem</h3>
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Nombre del Ítem"
+            value={editingItem.nombre}
+            onChange={handleInputChange}
+            required
+            className="inventory-input"
+          />
+          <input
+            type="number"
+            name="stock"
+            placeholder="Stock"
+            value={editingItem.stock}
+            onChange={handleInputChange}
+            required
+            min="0"
+            className="inventory-input"
+          />
+          <input
+            type="number"
+            name="precio"
+            placeholder="Precio (COP)"
+            value={editingItem.precio}
+            onChange={handleInputChange}
+            required
+            min="0"
+            step="50"
+            className="inventory-input"
+          />
+          <div className="edit-actions-container">
+            <button onClick={handleSaveEdit} disabled={loading} className="inventory-button save-button">
+              {loading ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+            <button onClick={handleCancelEdit} className="inventory-button cancel-button">Cancelar</button>
+            {error && loading && <p className="error-message" style={{ color: 'red', marginLeft: '10px' }}>{error}</p>}
+          </div>
+        </div>
+      )}
 
       {/* Tabla de Inventario Actual */}
       <h3>Inventario Actual</h3>
@@ -128,20 +222,26 @@ function InventoryManagementPage() {
             <tr>
               <th>ID</th>
               <th>Nombre</th>
-              <th>Categoría</th>
               <th>Stock</th>
               <th>Precio Unitario</th>
-              {/* Podrías añadir acciones (Editar, Eliminar) */}
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {inventory.map(item => (
               <tr key={item.id}>
                 <td>{item.id}</td>
-                <td>{item.name}</td>
-                <td>{item.category}</td>
+                <td>{item.nombre}</td>
                 <td>{item.stock}</td>
-                <td>${item.price.toLocaleString('es-CO')}</td>
+                <td>${item.precio?.toLocaleString('es-CO')}</td>
+                <td className="actions-column">
+                  <button onClick={() => handleEditItem(item)} disabled={isEditing} className="inventory-button edit-table-button">
+                    Editar
+                  </button>
+                  <button onClick={() => handleDeleteItem(item.id)} disabled={isEditing} className="inventory-button delete-table-button">
+                    Eliminar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
