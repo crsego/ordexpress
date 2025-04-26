@@ -1,18 +1,18 @@
+// src/App.js
 import React, { useState, useReducer, Suspense, useMemo, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom"; // ¡Importaciones actualizadas!
 import DashboardLayout from './pages/DashboardLayout';
 import OrderManagementPage from './pages/OrderManagementPage';
 import InventoryManagementPage from './pages/InventoryManagementPage';
 import TableManagementPage from './pages/TableManagementPage';
 import OrganizationManagementPage from './pages/OrganizationManagementPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage'; // Importa el componente RegisterPage
 import "./App.css";
 import logo from "./assets/ordexpress.png";
 
-
 const Menu = React.lazy(() => import("./components/Menu"));
 const CartModal = React.lazy(() => import("./components/Cart"));
-
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-CO', {
@@ -29,6 +29,7 @@ const Landing = () => (
     <Link to="/menu"><button>Haz tu pedido</button></Link>
     <Link to="/contactos"><button>Contactos</button></Link>
     <Link to="/about"><button>Quienes somos</button></Link>
+    <Link to="/register"><button>Registrarse</button></Link> {/* Nuevo enlace para registrarse */}
   </div>
 );
 
@@ -64,10 +65,10 @@ const cartReducer = (state, action) => {
       const itemInCart = state.find(item => item.id === action.payload.id);
       return itemInCart
         ? state.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
+            item.id === action.payload.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
         : [...state, { ...action.payload, quantity: 1 }];
 
     case "REMOVE_ITEM":
@@ -76,10 +77,10 @@ const cartReducer = (state, action) => {
     case "UPDATE_QUANTITY":
       return action.payload.quantity > 0
         ? state.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: action.payload.quantity }
-            : item
-        )
+            item.id === action.payload.id
+              ? { ...item, quantity: action.payload.quantity }
+              : item
+          )
         : state.filter(item => item.id !== action.payload.id);
 
     default:
@@ -117,15 +118,15 @@ const App = () => {
   const [cart, dispatch] = useReducer(cartReducer, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Intenta leer el estado de autenticación de localStorage
-    // Esto es una forma simple de persistencia, JWT es más seguro/completo
-    return localStorage.getItem('isAuthenticated') === 'true';
+    return localStorage.getItem('authToken') ? true : false;
   });
+  const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || null);
+  const navigate = useNavigate(); // Ahora 'navigate' funcionará correctamente
 
-  // Guarda el estado en localStorage cuando cambie
   useEffect(() => {
-    localStorage.setItem('isAuthenticated', isAuthenticated);
-  }, [isAuthenticated]);
+    localStorage.setItem('authToken', authToken || '');
+  }, [authToken]);
+
   const total = useMemo(() =>
     cart.reduce((total, item) => total + item.price * item.quantity, 0),
     [cart]
@@ -134,11 +135,21 @@ const App = () => {
   const handleLoginSuccess = (userData) => {
     console.log("Login successful in App component", userData);
     setIsAuthenticated(true);
+    setAuthToken(userData.token);
+  };
+
+  const handleRegistrationSuccess = (userData) => {
+    console.log("Registro exitoso en App component", userData);
+    setIsAuthenticated(true); // ¡Actualiza el estado de autenticación!
+    setAuthToken(userData.token); // Guarda el token si tu backend lo devuelve en el registro
+    navigate('/admin/organizations'); // Redirige directamente aquí
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
+    setAuthToken(null);
+    localStorage.removeItem('authToken');
+    navigate('/login');
   };
 
   function ProtectedRoute({ isAuthenticated, children }) {
@@ -170,52 +181,51 @@ const App = () => {
   };
 
   return (
-    <Router>
-      <div className="app">
-        <div className="logo-container">
-          <img src={logo} alt="Logo" className="logo" />
-        </div>
-
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
-                <DashboardLayout onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="orders" />} />
-            <Route path="orders" element={<OrderManagementPage />} />
-            <Route path="inventory" element={<InventoryManagementPage />} />
-            <Route path="tables" element={<TableManagementPage />} />
-            <Route path="organizations" element={<OrganizationManagementPage />} />
-          </Route>
-          <Route path="/menu" element={<MenuView />} />
-          <Route path="/contactos" element={<Contactos />} />
-          <Route path="/about" element={<QuienesSomos />} />
-        </Routes>
-
-        <Suspense fallback={<div>Cargando carrito...</div>}>
-          {isModalOpen && (
-            <CartModal
-              cart={cart}
-              dispatch={dispatch}
-              onClose={() => setIsModalOpen(false)}
-              total={total}
-              formatCurrency={formatCurrency}
-            />
-          )}
-        </Suspense>
+    <div className="app">
+      <div className="logo-container">
+        <img src={logo} alt="Logo" className="logo" />
       </div>
-    </Router>
+
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
+          }
+        />
+        <Route path="/register" element={<RegisterPage onRegistrationSuccess={handleRegistrationSuccess} />} /> {/* Pasa la prop */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <DashboardLayout onLogout={handleLogout} authToken={authToken} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="orders" />} />
+          <Route path="orders" element={<OrderManagementPage />} />
+          <Route path="inventory" element={<InventoryManagementPage />} />
+          <Route path="tables" element={<TableManagementPage />} />
+          <Route path="organizations" element={<OrganizationManagementPage isAuthenticated={isAuthenticated} />} />
+        </Route>
+        <Route path="/menu" element={<MenuView />} />
+        <Route path="/contactos" element={<Contactos />} />
+        <Route path="/about" element={<QuienesSomos />} />
+      </Routes>
+
+      <Suspense fallback={<div>Cargando carrito...</div>}>
+        {isModalOpen && (
+          <CartModal
+            cart={cart}
+            dispatch={dispatch}
+            onClose={() => setIsModalOpen(false)}
+            total={total}
+            formatCurrency={formatCurrency}
+          />
+        )}
+      </Suspense>
+    </div>
   );
 };
 
