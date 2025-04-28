@@ -19,35 +19,36 @@ function LoginPage({ onLoginSuccess }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     if (!email || !password) {
       setError('Por favor, ingresa el correo y la contraseña.');
       return;
     }
-
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       const userData = await loginUser(email, password);
       console.log('Login successful, user data:', userData);
-
-      // 'userData' ahora debería contener el token que devuelve tu API
+  
+      const nombre = userData.nombre;
       const token = userData.token;
-
-      // Guarda el token en localStorage o en un estado global (como Context API o Redux) para futuras peticiones
-      localStorage.setItem('authToken', token); // Ejemplo usando localStorage
-
-      onLoginSuccess(userData); // Pasa los datos del usuario (incluyendo el token) a App.jsx
-
-      //navigate('/admin');
-
+      const rol = userData.rol; // 👈 Aquí ya capturaste el rol
+      const organizationId = userData.organizationId;
+  
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('organizationId', organizationId);
+      localStorage.setItem('userRol', rol); // 🔥 Agregar esta línea faltante
+  
+      onLoginSuccess(userData);
+  
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message || 'Ocurrió un error al iniciar sesión.');
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className="login-page-container">

@@ -17,7 +17,7 @@ function OrderManagementPage() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('https://localhost:8080/api/Pedidos')
+    axios.get('https://localhost:8080/api/Pedidos/1/listar')
       .then(response => {
         setOrders(response.data);
         setError(null);
@@ -130,15 +130,14 @@ function OrderManagementPage() {
           </thead>
           <tbody>
             {orders.map(order => (
-              <tr key={order.id}>
-                <td>{order.id}</td>
+              <tr key={order.pedidoId}>
+                <td>{order.pedidoId}</td>
                 <td>{order.nombreCliente}</td>
-                <td>{order.detalles.length}</td>
                 <td>${order.total.toLocaleString('es-CO')}</td>
                 <td>
                   <select
-                    value={selectedStatuses[order.id] || order.estado}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                    value={selectedStatuses[order.pedidoId] || order.estado}
+                    onChange={(e) => handleStatusChange(order.pedidoId, e.target.value)}
                     disabled={loading} // Deshabilitar el select mientras se actualiza
                   >
                     {possibleStatus.map(status => (
