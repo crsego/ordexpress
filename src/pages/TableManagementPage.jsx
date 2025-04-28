@@ -1,37 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../App.css';
+
 function TableManagementPage() {
-  // Estados para la gestión de la lista de mesas
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Estado para la actualización del estado de una mesa
   const [updatingTableId, setUpdatingTableId] = useState(null);
-
-  // Estado y funciones para la creación de una nueva mesa
   const [newItemNumber, setNewItemNumber] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  // ID de la organización (TODO: Obtener esto dinámicamente)
-  const organizationId = 1;
-
-  // Posibles estados para una mesa
   const possibleStatus = ['Libre', 'Ocupada', 'Reservada', 'Necesita Limpieza', 'Inactiva'];
 
-  // Efecto para cargar las mesas al montar el componente y cuando cambia organizationId
   useEffect(() => {
-    fetchTables(organizationId);
-  }, [organizationId]);
+    const orgId = localStorage.getItem('organizationId'); // 🔥 Ahora lo tomamos dinámicamente
+    if (orgId) {
+      fetchTables(orgId);
+    } else {
+      setError("No se encontró organización activa.");
+      setLoading(false);
+    }
+  }, []);
 
-  // Función para obtener la lista de mesas desde la API
   const fetchTables = async (orgId) => {
     setLoading(true);
     setError(null);
     console.log(`Fetching tables for organization ${orgId} from API...`);
     try {
-      const response = await axios.get(`https://localhost:8080/api/Mesas/${orgId}`);
+      const response = await axios.get(`https://localhost:8080/api/Mesas/${orgId}/list`); // 🔥 Cambiado
       console.log("Tables fetched from API:", response.data);
       setTables(response.data);
     } catch (err) {
@@ -42,9 +38,10 @@ function TableManagementPage() {
     }
   };
 
-  // Función para actualizar el estado de una mesa
   const handleStatusUpdate = async (tableId, newStatus) => {
     if (updatingTableId) return;
+
+    const orgId = localStorage.getItem('organizationId'); // 🔥 Siempre dinámico
 
     const originalTables = [...tables];
     setUpdatingTableId(tableId);
@@ -55,7 +52,7 @@ function TableManagementPage() {
     );
 
     try {
-      await updateTableStatus(organizationId, tableId, newStatus);
+      await updateTableStatus(orgId, tableId, newStatus);
       setError(null);
     } catch (err) {
       console.error("Error updating table status:", err);
@@ -66,7 +63,6 @@ function TableManagementPage() {
     }
   };
 
-  // Función para enviar la petición PUT para actualizar el estado de la mesa
   const updateTableStatus = async (orgId, tableId, newStatus) => {
     console.log(`Updating table ${tableId} in organization ${orgId} to status ${newStatus} via API`);
     try {
@@ -74,7 +70,7 @@ function TableManagementPage() {
         `https://localhost:8080/api/Mesas/${orgId}/${tableId}`,
         {
           id: tableId,
-          organizationId: orgId,
+          organizationId: parseInt(orgId),
           estado: newStatus,
         }
       );
@@ -86,20 +82,20 @@ function TableManagementPage() {
     }
   };
 
-  // Función para crear una nueva mesa
   const handleCreateMesa = async () => {
+    const orgId = localStorage.getItem('organizationId'); // 🔥 dinámico
     setIsCreating(true);
     setError(null);
     try {
       const newMesa = {
-        organizationId: organizationId,
+        organizationId: parseInt(orgId),
         numero: parseInt(newItemNumber),
-        estado: 'Libre',
+        estado: 'FREE', // Ajustado para ser coherente
       };
 
       const response = await axios.post('https://localhost:8080/api/Mesas', newMesa);
       console.log("Mesa creada:", response.data);
-      fetchTables(organizationId);
+      fetchTables(orgId);
       setNewItemNumber('');
     } catch (error) {
       console.error("Error al crear la mesa:", error);
@@ -109,7 +105,6 @@ function TableManagementPage() {
     }
   };
 
-  // Renderizado condicional para el estado de carga y error
   if (loading) return <p>Cargando mesas...</p>;
   if (error) return <div className="error-message">{error}</div>;
 
@@ -118,22 +113,21 @@ function TableManagementPage() {
       <h2>Gestión de Mesas</h2>
 
       {/* Formulario para crear una nueva mesa */}
-      <div className="new-item-container"> {/* CONTENEDOR DEL CONTORNO */}
+      <div className="new-item-container">
         <h3>Crear Nueva Mesa</h3>
-        <div className="new-item-form"> {/* CONTENEDOR DE LOS ELEMENTOS DEL FORMULARIO */}
+        <div className="new-item-form">
           <input
             type="number"
             value={newItemNumber}
             onChange={(e) => setNewItemNumber(e.target.value)}
             placeholder="Número de Mesa"
-            // PLACEHOLDER
           />
           <button onClick={handleCreateMesa} disabled={isCreating || !newItemNumber} className="add-button">
             {isCreating ? 'Creando...' : 'Crear Mesa'}
           </button>
-        </div> {/* CIERRE DEL CONTENEDOR DE LOS ELEMENTOS DEL FORMULARIO */}
+        </div>
         {error && <div className="error-message">{error}</div>}
-      </div> {/* CIERRE DEL CONTENEDOR DEL CONTORNO */}
+      </div>
 
       {/* Tabla para mostrar la lista de mesas */}
       {tables.length === 0 ? (

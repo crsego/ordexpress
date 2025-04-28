@@ -1,64 +1,137 @@
-// src/pages/RegisterPage.jsx
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { registerUser } from '../api/auth';
-//import '../styles/RegisterPage.css'; // Si tienes estilos
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import Notification from '../components/Notification'; // 🔥 Asegúrate que tengas este componente de notificaciones
 
-function RegisterPage({ onRegistrationSuccess }) { // Recibe la prop
+const RegisterPage = () => {
+  const location = useLocation();
+
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [rol, setRol] = useState(''); // 🔥 Ahora sí
+  const [organizationId, setOrganizationId] = useState(null); // 🔥 Ahora sí
+  const [isInvitation, setIsInvitation] = useState(false); // 🔥 Ahora sí
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
-    const userData = { nombre, email, password }; // Ajusta según lo que espera tu API
-
-    try {
-      const responseData = await registerUser(userData);
-      console.log('Registro exitoso:', responseData);
-      setLoading(false);
-      onRegistrationSuccess(responseData); // Llama a la función de App.js
-      // La redirección ahora se maneja en App.js después de actualizar el estado
-    } catch (err) {
-      console.error('Error al registrar:', err);
-      setError(err.message || 'Ocurrió un error al registrar el usuario.');
-      setLoading(false);
-    }
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification({ message: '', type: '' });
+    }, 3000);
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const invitation = params.get('invitation');
+
+    if (invitation) {
+      try {
+        const decoded = atob(invitation); // Decodificar Base64
+        const [decodedEmail, decodedRol, decodedOrganizationId] = decoded.split('|');
+
+        setEmail(decodedEmail);
+        setRol(decodedRol);
+        setOrganizationId(parseInt(decodedOrganizationId));
+        setIsInvitation(true);
+
+      } catch (error) {
+        console.error("Error decoding invitation:", error);
+        showNotification("Error al procesar la invitación.", "error");
+      }
+    }
+  }, [location]);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const payload = {
+        nombre,
+        email,
+        password,
+        rol: rol || 'ADMIN',
+        organizationId: organizationId !== null ? organizationId : null
+      };
+  
+      const response = await axios.post('https://localhost:8080/auth/signin', payload);
+  
+      console.log("Registro exitoso:", response.data);
+  
+      showNotification("Registro exitoso. Redirigiendo al login...", "success");
+  
+      // Esperar 2 segundos para mostrar notificación, luego redirigir
+      setTimeout(() => {
+        window.location.href = "/login"; // 🔥 Aquí se redirige
+      }, 2000);
+  
+    } catch (error) {
+      console.error("Error al registrar:", error);
+      showNotification("Error al registrarse. Intente nuevamente.", "error");
+    }
+  };
+  
   return (
-    <div className="register-page-container">
-      <div className="register-form-card">
-        <h2>Registro de Nuevo Usuario</h2>
-        <form onSubmit={handleSubmit}>
-          {/* Campos del formulario (nombre, email, password) */}
-          <div className="form-group">
-            <label htmlFor="nombre">Nombre</label>
-            <input type="text" id="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">Correo Electrónico</label>
-            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          {error && <p className="error-message register-error">{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Registrando...' : 'Registrar'}
+    <div className="modal-overlay">
+      <div className="modal">
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ message: '', type: '' })}
+        />
+
+        <h2 style={{ marginBottom: '20px', color: '#d9534f' }}>Registro</h2>
+
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <input
+            type="text"
+            placeholder="Nombre completo"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            className="inventory-input" // Usa tu input bonito
+          />
+
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isInvitation}
+            className="inventory-input"
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="inventory-input"
+          />
+
+          {/* Campos ocultos si viene invitación */}
+          {isInvitation && (
+            <>
+              <input type="hidden" value={rol} />
+              <input type="hidden" value={organizationId} />
+            </>
+          )}
+
+          <button type="submit" className="save-button">
+            Registrarse
           </button>
         </form>
-        <p><Link to="/login">¿Ya tienes una cuenta? Iniciar sesión</Link></p>
+
+        <button onClick={() => window.location.href = '/login'} className="cancel-button" style={{ marginTop: '10px' }}>
+          Cancelar
+        </button>
       </div>
     </div>
+
   );
-}
+};
 
 export default RegisterPage;
