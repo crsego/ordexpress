@@ -46,28 +46,31 @@ function InventoryManagementPage() {
     const organizationId = localStorage.getItem('organizationId');
 
     try {
+      if (!newItem.name || !newItem.stock || !newItem.price || !newItem.category) {
+        alert("Todos los campos son obligatorios."); // O mejor: notificación amigable
+        return;
+      }
+  
       const newProduct = {
         nombre: newItem.name,
         stock: parseInt(newItem.stock),
         precio: parseFloat(newItem.price),
-        organizationId: parseInt(organizationId),
-        category: 'Otros',
-        state: 'Activo'
+        categoria: newItem.category, // 🔥 Aquí mandamos la categoría
+        organizationId: parseInt(organizationId)
       };
-
+  
       await axios.post('https://localhost:8080/api/Productos', newProduct, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
-
-      // Reload inventory
+  
       setShowModal(false);
-      setNewItem({ name: '', stock: '', price: '' });
-      window.location.reload(); // Opcional: recargar para actualizar la lista
-    } catch (err) {
-      console.error("Error adding item:", err);
-      setError("Error al añadir el producto.");
+      setNewItem({ name: '', stock: '', price: '', category: '' });
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al guardar producto:", error);
     }
   };
+  
 
   const thStyle = {
     borderBottom: '1px solid #ccc',
@@ -87,8 +90,8 @@ function InventoryManagementPage() {
       nombre: producto.nombre,
       stock: producto.stock,
       precio: producto.precio,
-      categoria: producto.categoria || "", // 🔥 ya viene el label bonito
-      estado: producto.estado || "",       // 🔥 ya viene el label bonito
+      categoria: producto.categoria || "",
+      estado: producto.estado || "",
     });
     setShowEditModal(true);
   };
@@ -101,7 +104,7 @@ function InventoryManagementPage() {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
   
-      await fetchInventory(); // 🔥 Recargar la lista
+      await fetchInventory(); // Recargar la lista
     } catch (error) {
       console.error("Error al eliminar el producto:", error);
       setError("Error al eliminar el producto.");
@@ -183,8 +186,6 @@ function InventoryManagementPage() {
   onClose={() => setNotification({ message: '', type: '' })}
 />
 
-  
-
   return (
     <div>
       <h2>Gestión de Inventario</h2>
@@ -194,6 +195,7 @@ function InventoryManagementPage() {
       {/* Modal para añadir producto */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <h3>Nuevo Producto</h3>
+
         <input
           type="text"
           placeholder="Nombre del Ítem"
@@ -201,6 +203,7 @@ function InventoryManagementPage() {
           onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
           style={{ marginBottom: '10px', width: '100%' }}
         />
+
         <input
           type="number"
           placeholder="Stock Inicial"
@@ -208,6 +211,7 @@ function InventoryManagementPage() {
           onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
           style={{ marginBottom: '10px', width: '100%' }}
         />
+
         <input
           type="number"
           placeholder="Precio (COP)"
@@ -215,8 +219,23 @@ function InventoryManagementPage() {
           onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
           style={{ marginBottom: '10px', width: '100%' }}
         />
+
+        <select
+          value={newItem.category}
+          onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+          style={{ marginBottom: '10px', width: '100%' }}
+        >
+          <option value="">Seleccione Categoría</option>
+          {categoriesList.map(cat => (
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
+
         <button onClick={handleAddItem} className="save-button">Guardar</button>
       </Modal>
+
 
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)}>
         {editingProduct && (
@@ -315,7 +334,7 @@ function InventoryManagementPage() {
                   onClick={() => handleRowClick(producto)}>
                 <td style={tdStyle}>{producto.nombre}</td>
                 <td style={tdStyle}>{producto.stock}</td>
-                <td style={tdStyle}>{producto.precio.toLocaleString()}</td>
+                <td style={tdStyle}>${producto.precio.toLocaleString()}</td>
                 <td style={tdStyle}>{producto.categoria}</td>
                 <td style={{ ...tdStyle, textAlign: 'center' }}>
                   <button

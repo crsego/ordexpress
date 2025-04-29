@@ -1,202 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Modal from 'react-modal'; // Importar Modal
-import '../App.css';
-
-// Establecer el elemento raíz para react-modal
-Modal.setAppElement('#root');
+import '../App.css'; // Asegúrate que tienes tus estilos
 
 function OrderManagementPage() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false); // Cambiamos a false inicialmente
-  const [error, setError] = useState(null);
-  const [selectedStatuses, setSelectedStatuses] = useState({});
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
-  const possibleStatus = ['Pendiente', 'Confirmado', 'En Preparación', 'Listo para Entregar', 'En Camino', 'Entregado', 'Cancelado'];
+  const [productsList, setProductsList] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [errorProducts, setErrorProducts] = useState(null);
 
+  // ✅ Cargar todos los productos al iniciar
   useEffect(() => {
-    setLoading(true);
-    axios.get('https://localhost:8080/api/Pedidos/1/listar')
-      .then(response => {
-        setOrders(response.data);
-        setError(null);
-      })
-      .catch(err => {
-        console.error("Error fetching orders:", err);
-        setError("No se pudieron cargar los pedidos.");
-        setOrders([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    const orgId = localStorage.getItem('organizationId');
+    console.log("🔥 organizationId desde localStorage:", orgId);
+  
+    if (orgId && orgId !== "null" && orgId !== "0") {
+      fetchProducts();
+    } else {
+      console.warn("⚠️ No hay organización activa todavía, no se consulta productos.");
+    }
   }, []);
+  
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    setSelectedStatuses(prev => ({ ...prev, [orderId]: newStatus }));
-    // Llamar directamente a la función de actualización individual
-    await handleSingleStatusUpdate(orderId, newStatus);
-  };
-
-  const handleSingleStatusUpdate = async (orderId, newStatus) => {
-    setLoading(true);
-    setError(null);
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    setErrorProducts(null);
+  
     try {
-      const response = await axios.put(`https://localhost:8080/api/Pedidos/${orderId}`, {
-        id: orderId,
-        nuevoEstado: newStatus
-      });
-      console.log(`Estado del pedido ${orderId} actualizado:`, response.data);
-
-      // Actualizar el estado del pedido en la interfaz de usuario
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderId ? { ...order, estado: newStatus } : order
-        )
-      );
-      // Limpiar el estado seleccionado para este pedido (opcional, ya que se actualiza inmediatamente)
-      setSelectedStatuses(prev => {
-        const newState = { ...prev };
-        delete newState[orderId];
-        return newState;
-      });
-      // Opcional: Mostrar un mensaje de éxito
-      // alert(`Estado del pedido ${orderId} actualizado a ${newStatus}`);
+      const organizationId = localStorage.getItem('organizationId');
+      console.log("🌎 Buscando productos para organizationId:", organizationId);
+  
+      if (!organizationId || organizationId === "null" || organizationId === "0") {
+        console.error("❌ organizationId no válido. No se cargan productos.");
+        setErrorProducts("No se encontró organización activa.");
+        setLoadingProducts(false);
+        return;
+      }
+  
+      const url = `https://localhost:8080/api/Productos/${parseInt(organizationId)}/list`;
+      const response = await axios.get(url);
+  
+      console.log("✅ Productos recibidos:", response.data);
+  
+      setProductsList(response.data);
+      setFilteredProducts(response.data);
+  
     } catch (error) {
-      console.error(`Error al actualizar el estado del pedido ${orderId}:`, error);
-      setError(`Error al actualizar el estado del pedido ${orderId}. Intente de nuevo.`);
-      // Revertir el estado en el select si la actualización falla
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderId ? { ...order, estado: selectedStatuses[orderId] || order.estado } : order
-        )
-      );
+      console.error("❌ Error al cargar productos:", error);
+      setErrorProducts("Error al cargar productos.");
+      setProductsList([]);
+      setFilteredProducts([]);
     } finally {
-      setLoading(false);
+      setLoadingProducts(false);
+    }
+  };  
+  
+
+  // ✅ Manejar cambio de categoría
+  const handleCategoryChange = (categoria) => {
+    setSelectedCategory(categoria);
+
+    if (!categoria) {
+      setFilteredProducts(productsList);
+    } else {
+      const filtrados = productsList.filter(p => p.categoria === categoria);
+      setFilteredProducts(filtrados);
     }
   };
-
-  const fetchOrderDetails = async (orderId) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`https://localhost:8080/api/Pedidos/${orderId}`);
-      const orderWithDetails = {
-        ...response.data,
-        detalles: await Promise.all(response.data.detalles.map(async (detalle) => {
-          const productResponse = await axios.get(`https://localhost:8080/api/Productos/${detalle.productoId}`);
-          return {
-            ...detalle,
-            nombreProducto: productResponse.data.nombre,
-            precioUnitario: productResponse.data.precio,
-          };
-        })),
-      };
-      setSelectedOrderDetails(orderWithDetails);
-      setIsModalOpen(true); // Abrir el modal
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching order details:", err);
-      setError("Error al cargar los detalles del pedido.");
-      setSelectedOrderDetails(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div>
-      <h2>Gestión de Pedidos</h2>
-      {orders.length === 0 ? (
-        <p>No hay pedidos para mostrar.</p>
-      ) : (
-        <table style={{ width: '100%' }}> {/* Ajustar el ancho de la tabla */}
-          <thead>
-            <tr>
-              <th>ID Pedido</th>
-              <th>Cliente</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Estado Actual</th>
-              <th>Acciones</th>
-              <th>Fecha</th>
-              <th>Detalles</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(order => (
-              <tr key={order.pedidoId}>
-                <td>{order.pedidoId}</td>
-                <td>{order.nombreCliente}</td>
-                <td>${order.total.toLocaleString('es-CO')}</td>
-                <td>
-                  <select
-                    value={selectedStatuses[order.pedidoId] || order.estado}
-                    onChange={(e) => handleStatusChange(order.pedidoId, e.target.value)}
-                    disabled={loading} // Deshabilitar el select mientras se actualiza
-                  >
-                    {possibleStatus.map(status => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                  {loading && <span className="updating-text">Actualizando...</span>} {/* Mostrar texto de carga */}
-                </td>
-                <td>{new Date(order.fecha).toLocaleString('es-CO')}</td>
-                <td className="details-action-cell"> {/* Celda para el botón "Ver Detalles" */}
-                  <button className="ver-detalles-button" onClick={() => fetchOrderDetails(order.id)}>
-                    Ver Detalles
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <h2>Menú de Productos</h2>
 
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Detalles del Pedido"
-        style={{
-          overlay: {
-            backgroundColor: 'rgba(0, 0, 0, 0.3)', /* Reducimos la opacidad del overlay para más transparencia */
-            backdropFilter: 'blur(5px)', /* Añadimos un efecto de desenfoque al fondo (si el navegador lo soporta) */
-          },
-          content: {
-            width: '60%',
-            margin: 'auto',
-            borderRadius: '12px', /* Aumentamos un poco el redondeo */
-            padding: '30px', /* Aumentamos un poco el padding */
-            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)', /* Sombra más pronunciada */
-            backgroundColor: 'rgba(248, 244, 229, 0.9)', /* Fondo suave con ligera transparencia */
-            backdropFilter: 'blur(10px)', /* Añadimos un efecto de desenfoque al fondo del modal (si el navegador lo soporta) */
-            border: '1px solid rgba(0, 0, 0, 0.1)', /* Borde sutil */
-          },
-        }}
-      >
-        {selectedOrderDetails && (
-          <div className="order-details-container">
-            <h3>Detalles del Pedido {selectedOrderDetails.id}</h3>
-            <p>Cliente: {selectedOrderDetails.nombreCliente}</p>
-            <p>Estado: {selectedOrderDetails.estado}</p>
-            <p>Total: ${selectedOrderDetails.total.toLocaleString('es-CO')}</p>
-            <h4>Items:</h4>
-            <ul>
-              {selectedOrderDetails.detalles.map(item => (
-                <li key={item.id}>
-                  {item.nombreProducto} - Cantidad: {item.cantidad} - Precio Unitario: ${item.precioUnitario.toLocaleString('es-CO')} - Subtotal: ${item.subtotal.toLocaleString('es-CO')}
-                </li>
-              ))}
-            </ul>
-            <button onClick={closeModal} className="close-modal-button">Cerrar</button>
-          </div>
+      {/* Botones de Categorías */}
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <button onClick={() => handleCategoryChange('')} className="inventory-button">Todas</button>
+        <button onClick={() => handleCategoryChange('ENTRADA')} className="inventory-button">Entradas</button>
+        <button onClick={() => handleCategoryChange('PLATO_FUERTE')} className="inventory-button">Platos Fuertes</button>
+        <button onClick={() => handleCategoryChange('BEBIDA')} className="inventory-button">Bebidas</button>
+        <button onClick={() => handleCategoryChange('POSTRE')} className="inventory-button">Postres</button>
+      </div>
+
+      {/* Grid de Productos */}
+      <div className="products-grid">
+        {loadingProducts ? (
+          <p>Cargando productos...</p>
+        ) : errorProducts ? (
+          <div className="error-message">{errorProducts}</div>
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.map(product => (
+            <div key={product.productoId} className="product-item">
+              <h3>{product.nombre}</h3>
+              <p>Precio: ${product.precio.toLocaleString('es-CO')}</p>
+              <p>Categoría: {product.categoria}</p>
+            </div>
+          ))
+        ) : (
+          <p>No hay productos disponibles.</p>
         )}
-      </Modal>
+      </div>
     </div>
   );
 }

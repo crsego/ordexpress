@@ -7,7 +7,6 @@ function Modal({ isOpen, onClose, children }) {
     <div style={modalOverlayStyle}>
       <div style={modalContentStyle}>
         {children}
-        <button onClick={onClose} style={closeButtonStyle}>Cerrar</button>
       </div>
     </div>
   );
