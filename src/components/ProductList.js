@@ -11,6 +11,15 @@ function ProductList({ loadingProducts, errorProducts, filteredProducts, openAdd
       ) : filteredProducts.length > 0 ? (
         filteredProducts.map(product => (
           <div key={product.productoId} className="product-item">
+            {/* *** AQUÍ SE AÑADE LA IMAGEN *** */}
+            {product.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt={product.nombre}
+                className="product-image" // Puedes añadir estilos específicos en tu App.css
+                style={{ width: '50px', height: '50px', marginRight: '10px', verticalAlign: 'middle' }}
+              />
+            )}
             <h3 className="product-title">{product.nombre}</h3>
             <p className="product-price">${product.precio.toLocaleString('es-CO')}</p>
             <button
@@ -18,7 +27,6 @@ function ProductList({ loadingProducts, errorProducts, filteredProducts, openAdd
               className="ver-detalles-button">
               Agregar
             </button>
-
           </div>
         ))
       ) : (
