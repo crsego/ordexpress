@@ -8,7 +8,11 @@ Modal.setAppElement('#root');
 
 function OrderManagementPage() {
   const [orders, setOrders] = useState([]);
+<<<<<<< Updated upstream
   const [loading, setLoading] = useState(false); // Cambiamos a false inicialmente
+=======
+  const [loading, setLoading] = useState(true); // Cambiamos a true inicialmente
+>>>>>>> Stashed changes
   const [error, setError] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState({});
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
@@ -16,6 +20,7 @@ function OrderManagementPage() {
   const possibleStatus = ['Pendiente', 'Confirmado', 'En Preparación', 'Listo para Entregar', 'En Camino', 'Entregado', 'Cancelado'];
 
   useEffect(() => {
+<<<<<<< Updated upstream
     setLoading(true);
     axios.get('https://localhost:8080/api/Pedidos')
       .then(response => {
@@ -35,6 +40,35 @@ function OrderManagementPage() {
   const handleStatusChange = async (orderId, newStatus) => {
     setSelectedStatuses(prev => ({ ...prev, [orderId]: newStatus }));
     // Llamar directamente a la función de actualización individual
+=======
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const organizationId = localStorage.getItem('organizationId');
+    if (!organizationId || organizationId === "null" || organizationId === "0") {
+      setError("No se encontró la organización activa.");
+      setLoading(false);
+      return;
+    }
+    const response = await axios.get(`https://localhost:8080/organization${organizationId}/listar`);
+    setOrders(response.data);
+    setError(null);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    setError("No se pudieron cargar los pedidos para esta organización.");
+    setOrders([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setSelectedStatuses(prev => ({ ...prev, [orderId]: newStatus }));
+>>>>>>> Stashed changes
     await handleSingleStatusUpdate(orderId, newStatus);
   };
 
@@ -47,25 +81,37 @@ function OrderManagementPage() {
         nuevoEstado: newStatus
       });
       console.log(`Estado del pedido ${orderId} actualizado:`, response.data);
+<<<<<<< Updated upstream
 
       // Actualizar el estado del pedido en la interfaz de usuario
+=======
+>>>>>>> Stashed changes
       setOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId ? { ...order, estado: newStatus } : order
         )
       );
+<<<<<<< Updated upstream
       // Limpiar el estado seleccionado para este pedido (opcional, ya que se actualiza inmediatamente)
+=======
+>>>>>>> Stashed changes
       setSelectedStatuses(prev => {
         const newState = { ...prev };
         delete newState[orderId];
         return newState;
       });
+<<<<<<< Updated upstream
       // Opcional: Mostrar un mensaje de éxito
       // alert(`Estado del pedido ${orderId} actualizado a ${newStatus}`);
     } catch (error) {
       console.error(`Error al actualizar el estado del pedido ${orderId}:`, error);
       setError(`Error al actualizar el estado del pedido ${orderId}. Intente de nuevo.`);
       // Revertir el estado en el select si la actualización falla
+=======
+    } catch (error) {
+      console.error(`Error al actualizar el estado del pedido ${orderId}:`, error);
+      setError(`Error al actualizar el estado del pedido ${orderId}. Intente de nuevo.`);
+>>>>>>> Stashed changes
       setOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId ? { ...order, estado: selectedStatuses[orderId] || order.estado } : order
@@ -112,8 +158,15 @@ function OrderManagementPage() {
   return (
     <div>
       <h2>Gestión de Pedidos</h2>
+<<<<<<< Updated upstream
       {orders.length === 0 ? (
         <p>No hay pedidos para mostrar.</p>
+=======
+      {loading ? (
+        <p>Cargando pedidos...</p>
+      ) : orders.length === 0 ? (
+        <p>No hay pedidos para mostrar para esta organización.</p>
+>>>>>>> Stashed changes
       ) : (
         <table style={{ width: '100%' }}> {/* Ajustar el ancho de la tabla */}
           <thead>
@@ -133,8 +186,13 @@ function OrderManagementPage() {
               <tr key={order.id}>
                 <td>{order.id}</td>
                 <td>{order.nombreCliente}</td>
+<<<<<<< Updated upstream
                 <td>{order.detalles.length}</td>
                 <td>${order.total.toLocaleString('es-CO')}</td>
+=======
+                <td>{order.detalles ? order.detalles.length : 0}</td>
+                <td>${order.total ? order.total.toLocaleString('es-CO') : '0'}</td>
+>>>>>>> Stashed changes
                 <td>
                   <select
                     value={selectedStatuses[order.id] || order.estado}
@@ -147,7 +205,11 @@ function OrderManagementPage() {
                   </select>
                   {loading && <span className="updating-text">Actualizando...</span>} {/* Mostrar texto de carga */}
                 </td>
+<<<<<<< Updated upstream
                 <td>{new Date(order.fecha).toLocaleString('es-CO')}</td>
+=======
+                <td>{order.fecha ? new Date(order.fecha).toLocaleString('es-CO') : ''}</td>
+>>>>>>> Stashed changes
                 <td className="details-action-cell"> {/* Celda para el botón "Ver Detalles" */}
                   <button className="ver-detalles-button" onClick={() => fetchOrderDetails(order.id)}>
                     Ver Detalles
@@ -185,12 +247,21 @@ function OrderManagementPage() {
             <h3>Detalles del Pedido {selectedOrderDetails.id}</h3>
             <p>Cliente: {selectedOrderDetails.nombreCliente}</p>
             <p>Estado: {selectedOrderDetails.estado}</p>
+<<<<<<< Updated upstream
             <p>Total: ${selectedOrderDetails.total.toLocaleString('es-CO')}</p>
             <h4>Items:</h4>
             <ul>
               {selectedOrderDetails.detalles.map(item => (
                 <li key={item.id}>
                   {item.nombreProducto} - Cantidad: {item.cantidad} - Precio Unitario: ${item.precioUnitario.toLocaleString('es-CO')} - Subtotal: ${item.subtotal.toLocaleString('es-CO')}
+=======
+            <p>Total: ${selectedOrderDetails.total ? selectedOrderDetails.total.toLocaleString('es-CO') : '0'}</p>
+            <h4>Items:</h4>
+            <ul>
+              {selectedOrderDetails.detalles && selectedOrderDetails.detalles.map(item => (
+                <li key={item.id}>
+                  {item.nombreProducto} - Cantidad: {item.cantidad} - Precio Unitario: ${item.precioUnitario ? item.precioUnitario.toLocaleString('es-CO') : '0'} - Subtotal: ${item.subtotal ? item.subtotal.toLocaleString('es-CO') : '0'}
+>>>>>>> Stashed changes
                 </li>
               ))}
             </ul>
@@ -201,5 +272,8 @@ function OrderManagementPage() {
     </div>
   );
 }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 export default OrderManagementPage;
