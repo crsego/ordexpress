@@ -1,7 +1,7 @@
 // src/api/auth.js
 import axios from 'axios';
 
-const API_BASE_URL = 'https://localhost:8080'; // ¡REEMPLAZA CON LA URL BASE DE TU API!
+const API_BASE_URL = 'https://ordexpress-api.onrender.com'; // ¡REEMPLAZA CON LA URL BASE DE TU API!
 
 /**
  * Llama a la API para autenticar un usuario.

@@ -9,6 +9,8 @@ function TableManagementPage() {
   const [updatingTableId, setUpdatingTableId] = useState(null);
   const [newItemNumber, setNewItemNumber] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const default_url ="https://ordexpress-api.onrender.com"
+  
 
   const possibleStatus = ['Libre', 'Ocupada', 'Reservada', 'Necesita Limpieza', 'Inactiva'];
 
@@ -27,7 +29,7 @@ function TableManagementPage() {
     setError(null);
     console.log(`Fetching tables for organization ${orgId} from API...`);
     try {
-      const response = await axios.get(`https://localhost:8080/api/Mesas/${orgId}/list`); // 🔥 Cambiado
+      const response = await axios.get(`${default_url}/api/Mesas/${orgId}/list`); // 🔥 Cambiado
       console.log("Tables fetched from API:", response.data);
       setTables(response.data);
     } catch (err) {
@@ -67,7 +69,7 @@ function TableManagementPage() {
     console.log(`Updating table ${tableId} in organization ${orgId} to status ${newStatus} via API`);
     try {
       const response = await axios.put(
-        `https://localhost:8080/api/Mesas/${orgId}/${tableId}`,
+        `${default_url}/api/Mesas/${orgId}/${tableId}`,
         {
           id: tableId,
           organizationId: parseInt(orgId),
@@ -93,7 +95,7 @@ function TableManagementPage() {
         estado: 'FREE', // Ajustado para ser coherente
       };
 
-      const response = await axios.post('https://localhost:8080/api/Mesas', newMesa);
+      const response = await axios.post(`${default_url}/api/Mesas`, newMesa);
       console.log("Mesa creada:", response.data);
       fetchTables(orgId);
       setNewItemNumber('');

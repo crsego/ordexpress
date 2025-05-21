@@ -10,6 +10,7 @@ function LoginPage({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const default_url ="https://ordexpress-api.onrender.com"
 
   useEffect(() => {
     if (email || password) {

@@ -15,15 +15,18 @@ const Menu = () => {
   const [quantity, setQuantity] = useState(1);
   const [loadingToken, setLoadingToken] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const default_url ="https://ordexpress-api.onrender.com";
 
   const query = new URLSearchParams(useLocation().search);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = query.get("token");
+    
+
     if (token && !localStorage.getItem("mesaId")) {
       setLoadingToken(true);
-      axios.post("https://localhost:8080/api/mesas/token", { token })
+      axios.post(`${default_url}/api/mesas/token`, { token })
         .then((response) => {
           const { mesaId, organizationId } = response.data;
           localStorage.setItem("mesaId", mesaId);
@@ -54,7 +57,7 @@ const Menu = () => {
       const organizationId = localStorage.getItem('organizationId');
       if (!organizationId) throw new Error("No se encontró organizationId en el localStorage.");
 
-      const url = `https://localhost:8080/api/Productos/${parseInt(organizationId)}/list`;
+      const url = `${default_url}/api/Productos/${parseInt(organizationId)}/list`;
       const response = await axios.get(url);
       console.log("✅ Productos cargados:", response.data);
       setProductsList(response.data);
@@ -102,7 +105,7 @@ const Menu = () => {
 
       console.log("🚀 DTO que enviamos al backend:", dto);
 
-      const response = await axios.post("https://localhost:8080/api/Pedidos/agregar-producto", dto);
+      const response = await axios.post(`${default_url}/api/Pedidos/agregar-producto`, dto);
       const nuevoPedidoId = response.data.pedidoId;
       localStorage.setItem("pedidoId", nuevoPedidoId);
 

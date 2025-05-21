@@ -8,6 +8,7 @@ function OrderManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [errorProducts, setErrorProducts] = useState(null);
+  const default_url ="https://ordexpress-api.onrender.com"
 
   // ✅ Cargar todos los productos al iniciar
   useEffect(() => {
@@ -37,7 +38,7 @@ function OrderManagementPage() {
         return;
       }
   
-      const url = `https://localhost:8080/api/Productos/${parseInt(organizationId)}/list`;
+      const url = `${default_url}/api/Productos/${parseInt(organizationId)}/list`;
       const response = await axios.get(url);
   
       console.log("✅ Productos recibidos:", response.data);

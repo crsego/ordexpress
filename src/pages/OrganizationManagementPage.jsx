@@ -17,6 +17,7 @@ function OrganizationManagementPage({ isAuthenticated }) {
   const [inviteRole, setInviteRole] = useState('');
   const [rolesList, setRolesList] = useState([]);
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const default_url ="https://ordexpress-api.onrender.com"
 
 
   
@@ -51,7 +52,7 @@ const fetchOrganization = async () => {
     const token = localStorage.getItem('authToken');
 
     const response = await axios.post(
-      'https://localhost:8080/api/Organizations/info',
+      `${default_url}/api/Organizations/info`,
       { domainId: parseInt(organizationId) }, // 🔥 Envía el organizationId tomado del localStorage
       {
         headers: {
@@ -82,7 +83,7 @@ const fetchOrganization = async () => {
       const token = localStorage.getItem('authToken');
   
       const response = await axios.get(
-        'https://localhost:8080/api/Metadata/roles',
+        `${default_url}/api/Metadata/roles`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -113,7 +114,7 @@ const fetchOrganization = async () => {
         status: editedOrgStatus,
         mesas: [], // Añadir la propiedad 'mesas' con un array vacío
       };
-      await axios.put(`https://localhost:8080/api/Organizations/${editingOrgId}`, updatedOrg, {
+      await axios.put(`${default_url}/api/Organizations/${editingOrgId}`, updatedOrg, {
         headers: {
           Authorization: `Bearer ${token}`, // Usa el token obtenido justo antes de la petición
         },
@@ -154,7 +155,7 @@ const fetchOrganization = async () => {
       const token = localStorage.getItem('authToken');
   
       await axios.post(
-        'https://localhost:8080/api/Usuarios/invitar',
+        `${default_url}/api/Usuarios/invitar`,
         {
           email: inviteEmail,
           rol: inviteRole,
@@ -260,8 +261,6 @@ const fetchOrganization = async () => {
       </div>
     </div>
   </Modal>
-
-
 
 </div>
 

@@ -14,6 +14,7 @@ const RegisterPage = () => {
   const [isInvitation, setIsInvitation] = useState(false); // 🔥 Ahora sí
 
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const default_url ="https://ordexpress-api.onrender.com"
 
   const showNotification = (message, type) => {
     setNotification({ message, type });
@@ -55,7 +56,7 @@ const RegisterPage = () => {
         organizationId: organizationId !== null ? organizationId : null
       };
   
-      const response = await axios.post('https://localhost:8080/auth/signin', payload);
+      const response = await axios.post(`${default_url}/auth/signin`, payload);
   
       console.log("Registro exitoso:", response.data);
   

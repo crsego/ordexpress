@@ -16,6 +16,7 @@ function InventoryManagementPage() {
   const [showModal, setShowModal] = useState(false); // Controlar el modal
   const [newItem, setNewItem] = useState({ name: '', stock: '', price: '' });
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const default_url ="https://ordexpress-api.onrender.com"
 
 
   useEffect(() => {
@@ -31,7 +32,7 @@ function InventoryManagementPage() {
     fetchMetadata();
 
     setLoading(true);
-    axios.get(`https://localhost:8080/api/Productos/${organizationId}/list`)
+    axios.get(`${default_url}/api/Productos/${organizationId}/list`)
       .then(response => {
         setInventory(response.data);
       })
@@ -59,7 +60,7 @@ function InventoryManagementPage() {
         organizationId: parseInt(organizationId)
       };
   
-      await axios.post('https://localhost:8080/api/Productos', newProduct, {
+      await axios.post(`${default_url}/api/Productos`, newProduct, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
   
@@ -100,7 +101,7 @@ function InventoryManagementPage() {
     if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
   
     try {
-      await axios.delete(`https://localhost:8080/api/Productos/${productId}`, {
+      await axios.delete(`${default_url}/api/Productos/${productId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
   
@@ -117,7 +118,7 @@ function InventoryManagementPage() {
         ...editingProduct,
       };
   
-      await axios.put(`https://localhost:8080/api/Productos/${editingProduct.productoId}`, updatedProduct, {
+      await axios.put(`${default_url}/api/Productos/${editingProduct.productoId}`, updatedProduct, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
   
@@ -155,7 +156,7 @@ function InventoryManagementPage() {
     setLoading(true);
   
     try {
-      const response = await axios.get(`https://localhost:8080/api/Productos/${organizationId}/list`);
+      const response = await axios.get(`${default_url}/api/Productos/${organizationId}/list`);
       setInventory(response.data);
     } catch (err) {
       console.error("Error fetching inventory:", err);
@@ -168,8 +169,8 @@ function InventoryManagementPage() {
   const fetchMetadata = async () => {
     try {
       const [statesResponse, categoriesResponse] = await Promise.all([
-        axios.get('https://localhost:8080/api/Metadata/productStatus'),
-        axios.get('https://localhost:8080/api/Metadata/productCategory')
+        axios.get(`${default_url}/api/Metadata/productStatus`),
+        axios.get(`${default_url}/api/Metadata/productCategory`)
       ]);
   
       setStatesList(statesResponse.data);

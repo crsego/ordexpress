@@ -6,6 +6,8 @@ function CreateOrganizationForm({ onOrganizationCreated }) {
   const [orgName, setOrgName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const default_url ="https://ordexpress-api.onrender.com";
+
 
   const handleCreateOrganization = async () => {
     if (!orgName.trim()) {
@@ -18,7 +20,7 @@ function CreateOrganizationForm({ onOrganizationCreated }) {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post('https://localhost:8080/api/Organizations', {
+      const response = await axios.post(`${default_url}/api/Organizations`, {
         name: orgName,
         status: "ACTIVE",
         mesas: []
