@@ -1,55 +1,101 @@
 import React, { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
+import Notification from '../components/Notification';
 import axios from 'axios';
 import '../App.css';
-function OrganizationManagementPage() {
-  const [organizations, setOrganizations] = useState([]);
+
+function OrganizationManagementPage({ isAuthenticated }) {
+  const [organization, setOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newOrgName, setNewOrgName] = useState('');
-  const [newOrgStatus, setNewOrgStatus] = useState('Activa'); // Estado por defecto
-  const [isCreating, setIsCreating] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState(null);
   const [editedOrgName, setEditedOrgName] = useState('');
   const [editedOrgStatus, setEditedOrgStatus] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(null); // ID de la organización a eliminar
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('');
+  const [rolesList, setRolesList] = useState([]);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const default_url ="https://ordexpress-api.onrender.com"
 
-  const possibleStatus = ['Activa', 'Inactiva', 'En Mantenimiento'];
+
+  
 
   useEffect(() => {
-    fetchOrganizations();
-  }, []);
-
-  const fetchOrganizations = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get('https://localhost:8080/api/Organizations');
-      setOrganizations(response.data);
-    } catch (err) {
-      console.error("Error al cargar las organizaciones:", err);
-      setError("Error al cargar las organizaciones.");
-    } finally {
+    const token = localStorage.getItem('authToken');
+    const organizationId = localStorage.getItem('organizationId');
+    if (!token) {
+      console.error("No se encontró el token de autenticación.");
+      setError("No estás autenticado. Por favor, inicia sesión.");
       setLoading(false);
+      window.location.href = '/login';
+      return;
     }
+    fetchOrganization();
+    fetchRoles();
+}, [isAuthenticated]);
+
+const fetchOrganization = async () => {
+  setLoading(true);
+  setError(null);
+
+  const organizationId = localStorage.getItem('organizationId');
+
+  if (!organizationId) {
+    setError("No se encontró organizationId en localStorage.");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+
+    const response = await axios.post(
+      `${default_url}/api/Organizations/info`,
+      { domainId: parseInt(organizationId) }, // 🔥 Envía el organizationId tomado del localStorage
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setOrganization(response.data);
+  } catch (err) {
+    console.error("Error al cargar la organización:", err);
+    setError("Error al cargar la organización.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+
+    setTimeout(() => {
+      setNotification({ message: '', type: '' });
+    }, 3000); // La notificación desaparece sola en 3 segundos
   };
 
-  const handleCreateOrganization = async () => {
-    setIsCreating(true);
-    setError(null);
+  const fetchRoles = async () => {
     try {
-      const newOrg = { name: newOrgName, status: newOrgStatus, mesas: [] }; // Añadir mesas: []
-      const response = await axios.post('https://localhost:8080/api/Organizations', newOrg);
-      console.log("Organización creada:", response.data);
-      fetchOrganizations();
-      setNewOrgName('');
-    } catch (err) {
-      console.error("Error al crear la organización:", err);
-      setError("Error al crear la organización.");
-    } finally {
-      setIsCreating(false);
+      const token = localStorage.getItem('authToken');
+  
+      const response = await axios.get(
+        `${default_url}/api/Metadata/roles`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      setRolesList(response.data); // Aquí guardamos el array de roles
+    } catch (error) {
+      console.error("Error al cargar roles:", error);
     }
   };
+  
+
 
   const handleEditOrganization = (organization) => {
     setEditingOrgId(organization.domainId);
@@ -61,159 +107,163 @@ function OrganizationManagementPage() {
     setIsUpdating(true);
     setError(null);
     try {
+      const token = localStorage.getItem('authToken');
       const updatedOrg = {
         domainId: editingOrgId,
         name: editedOrgName,
         status: editedOrgStatus,
-        mesas: [] // Añadir la propiedad 'mesas' con un array vacío
+        mesas: [], // Añadir la propiedad 'mesas' con un array vacío
       };
-      await axios.put(`https://localhost:8080/api/Organizations/${editingOrgId}`, updatedOrg);
+      await axios.put(`${default_url}/api/Organizations/${editingOrgId}`, updatedOrg, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Usa el token obtenido justo antes de la petición
+        },
+      });
       console.log("Organización actualizada:", updatedOrg);
-      fetchOrganizations();
+      fetchOrganization();
       setEditingOrgId(null);
     } catch (err) {
       console.error("Error al actualizar la organización:", err);
       setError("Error al actualizar la organización.");
+      if (err.response && err.response.status === 401) {
+        console.error("Error 401: No autorizado. El token puede ser inválido o expirado.");
+        setError("No estás autorizado para realizar esta acción. Por favor, inicia sesión nuevamente.");
+        localStorage.removeItem('authToken');
+        // window.location.href = '/login'; // Ejemplo de redirección
+      } else if (err.response) {
+        console.error("Detalles del error del servidor:", err.response.data);
+        setError(`Error al actualizar la organización: ${err.response.data}`);
+      }
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleDeleteOrganization = (id) => {
-    setIsDeleting(id);
-  };
-
-  const confirmDeleteOrganization = async (id) => {
-    setError(null);
+  const handleInviteUser = async () => {
+    if (!inviteEmail || !inviteRole) {
+      showNotification("Por favor complete todos los campos.", "error");
+      return;
+    }
+  
+    const organizationId = localStorage.getItem('organizationId');
+    if (!organizationId) {
+      showNotification("No se encontró organizationId.", "error");
+      return;
+    }
+  
     try {
-      await axios.delete(`https://localhost:8080/api/Organizations/${id}`);
-      console.log(`Organización con ID ${id} eliminada.`);
-      fetchOrganizations();
-    } catch (err) {
-      console.error(`Error al eliminar la organización con ID ${id}:`, err);
-      setError("Error al eliminar la organización.");
-    } finally {
-      setIsDeleting(null);
+      const token = localStorage.getItem('authToken');
+  
+      await axios.post(
+        `${default_url}/api/Usuarios/invitar`,
+        {
+          email: inviteEmail,
+          rol: inviteRole,
+          organizationId: parseInt(organizationId)
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      showNotification("Usuario invitado exitosamente.", "success");
+  
+      setInviteEmail('');
+      setInviteRole('');
+      setShowInviteModal(false);
+  
+    } catch (error) {
+      console.error("Error al invitar usuario:", error);
+      showNotification("Error al enviar la invitación.", "error");
     }
   };
-
-  const cancelDeleteOrganization = () => {
-    setIsDeleting(null);
-  };
+  
+  
 
   if (loading) return <p>Cargando organizaciones...</p>;
   if (error) return <div className="error-message">{error}</div>;
 
   return (
-    <div>
-      <h2>Gestión de Organizaciones</h2>
 
-      {/* Añadir Nueva Organización */}
-      <div>
-        <h3>Añadir Nueva Organización</h3>
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', marginBottom: '15px', flexWrap: 'wrap' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', marginBottom: '5px' }}>
-            Nombre:
-            <input
-              type="text"
-              value={newOrgName}
-              onChange={(e) => setNewOrgName(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', minWidth: '150px', flexGrow: 1 }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', marginBottom: '5px' }}>
-            Estado:
-            <select
-              value={newOrgStatus}
-              onChange={(e) => setNewOrgStatus(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', minWidth: '150px', flexGrow: 1 }}
-            >
-              {possibleStatus.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-          <button
-            className="add-button"
-            onClick={handleCreateOrganization}
-            disabled={isCreating || !newOrgName}
-            style={{ marginTop: '15px' }}
-          >
-            {isCreating ? 'Añadiendo...' : 'Añadir Organización'}
-          </button>
-        </div>
-        {error && <div className="error-message">{error}</div>}
-      </div>
+    
+    
+    <div className="organization-page">
 
-      {/* Listado de Organizaciones */}
-      <h3>Organizaciones Existentes</h3>
-      {organizations.length === 0 ? (
-        <p>No hay organizaciones configuradas.</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+    <h2>{organization.name}</h2>
+    <p><strong>ID:</strong> {organization.domainId}</p>
+    <p><strong>Estado:</strong> {organization.status}</p>
+
+    <h3>Usuarios de la Organización</h3>
+    <button onClick={() => setShowInviteModal(true)} style={{ marginBottom: '20px' }}>Invitar Usuario</button>
+
+    <Notification
+      message={notification.message}
+      type={notification.type}
+      onClose={() => setNotification({ message: '', type: '' })}
+    />
+
+
+    {organization && organization.usuarios && organization.usuarios.length > 0 ? (
+      <table className="usuarios-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {organization.usuarios.map((usuario, index) => (
+            <tr key={index}>
+              <td>{usuario.nombre}</td>
+              <td>{usuario.email}</td>
+              <td>{usuario.rol}</td>
             </tr>
-          </thead>
-          <tbody>
-            {organizations.map(org => (
-              <tr key={org.domainId}>
-                <td>{org.domainId}</td>
-                <td>
-                  {editingOrgId === org.domainId ? (
-                    <input
-                      type="text"
-                      value={editedOrgName}
-                      onChange={(e) => setEditedOrgName(e.target.value)}
-                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', minWidth: '100px' }}
-                    />
-                  ) : (
-                    org.name
-                  )}
-                </td>
-                <td>
-                  {editingOrgId === org.domainId ? (
-                    <select value={editedOrgStatus} onChange={(e) => setEditedOrgStatus(e.target.value)}>
-                      {possibleStatus.map(status => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    org.status
-                  )}
-                </td>
-                <td>
-                  {editingOrgId === org.domainId ? (
-                    <>
-                      <button onClick={handleUpdateOrganization} disabled={isUpdating} className="save-button">
-                        {isUpdating ? 'Guardando...' : 'Guardar'}
-                      </button>
-                      <button onClick={() => setEditingOrgId(null)} className="cancel-button">Cancelar</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => handleEditOrganization(org)} className="edit-button">Editar</button>
-                      <button onClick={() => handleDeleteOrganization(org.domainId)} className="delete-button">Eliminar</button>
-                    </>
-                  )}
-                  {isDeleting === org.domainId && (
-                    <div>
-                      <span className="delete-confirmation-text">¿Seguro que quieres eliminar?</span>
-                      <button onClick={() => confirmDeleteOrganization(org.domainId)} className="confirm-delete-button">Sí</button>
-                      <button onClick={cancelDeleteOrganization} className="cancel-delete-button">No</button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
+    ) : (
+    <p>No hay usuarios en la organización.</p>
+  )}
+
+  <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
+    <div>
+      <h3>Invitar Usuario</h3>
+
+      <input
+        type="email"
+        placeholder="Correo del Usuario"
+        value={inviteEmail}
+        onChange={(e) => setInviteEmail(e.target.value)}
+        style={{ marginBottom: '10px', width: '100%' }}
+      />
+
+      <select
+        value={inviteRole}
+        onChange={(e) => setInviteRole(e.target.value)}
+        style={{ marginBottom: '10px', width: '100%' }}
+      >
+        <option value="">Seleccione Rol</option>
+        {rolesList.map((rol) => (
+          <option key={rol.value} value={rol.value}>
+            {rol.label}
+          </option>
+        ))}
+      </select>
+
+      <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={handleInviteUser} className="save-button" style={{ marginRight: '10px' }}>
+          Enviar Invitación
+        </button>
+        <button onClick={() => setShowInviteModal(false)} className="cancel-button">
+          Cancelar
+        </button>
+      </div>
     </div>
+  </Modal>
+
+</div>
+
   );
 }
 

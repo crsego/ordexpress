@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/auth'; // Importa la función mock
-import '../styles/LoginPage.css'; // Crearemos este archivo para los estilos
-// Asume que tienes tu logo en assets
-import logo from '../assets/ordexpress.png'; // Ajusta la ruta a tu logo
+import { loginUser } from '../api/auth'; // Importa la función desde tu archivo de servicios
+import '../styles/LoginPage.css';
+import logo from '../assets/ordexpress.png';
 
-// Recibe una función 'onLoginSuccess' como prop desde App.jsx
 function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const default_url ="https://ordexpress-api.onrender.com"
 
-  // Limpia el error cuando el usuario empieza a escribir de nuevo
   useEffect(() => {
     if (email || password) {
       setError(null);
@@ -21,34 +19,37 @@ function LoginPage({ onLoginSuccess }) {
   }, [email, password]);
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Evita que la página se recargue
-
+    event.preventDefault();
+  
     if (!email || !password) {
       setError('Por favor, ingresa el correo y la contraseña.');
       return;
     }
-
+  
     setLoading(true);
-    setError(null); // Limpia errores previos
-
+    setError(null);
+  
     try {
       const userData = await loginUser(email, password);
       console.log('Login successful, user data:', userData);
-
-      // Llama a la función pasada por App.jsx para actualizar el estado de autenticación
-      onLoginSuccess(userData); // Pasamos los datos del usuario por si los necesitas
-
-      // Redirige al dashboard principal del admin
-      navigate('/admin');
-
+  
+      const nombre = userData.nombre;
+      const token = userData.token;
+      const rol = userData.rol; // 👈 Aquí ya capturaste el rol
+      const organizationId = userData.organizationId;
+  
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('organizationId', organizationId);
+      localStorage.setItem('userRol', rol); // 🔥 Agregar esta línea faltante
+  
+      onLoginSuccess(userData);
+  
     } catch (err) {
       console.error("Login error:", err);
-      // Muestra el mensaje de error de la función mock/API
       setError(err.message || 'Ocurrió un error al iniciar sesión.');
-      setLoading(false); // Asegúrate de detener la carga en caso de error
+      setLoading(false);
     }
-    // No necesitas setLoading(false) en caso de éxito porque la navegación desmontará el componente
-  };
+  };  
 
   return (
     <div className="login-page-container">
@@ -65,7 +66,7 @@ function LoginPage({ onLoginSuccess }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@correo.com"
               required
-              disabled={loading} // Deshabilita mientras carga
+              disabled={loading}
             />
           </div>
 
@@ -78,11 +79,10 @@ function LoginPage({ onLoginSuccess }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
               required
-              disabled={loading} // Deshabilita mientras carga
+              disabled={loading}
             />
           </div>
 
-          {/* Muestra el mensaje de error si existe */}
           {error && <p className="error-message login-error">{error}</p>}
 
           <button type="submit" className="login-button" disabled={loading}>

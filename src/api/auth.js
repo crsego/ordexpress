@@ -1,33 +1,53 @@
+// src/api/auth.js
+import axios from 'axios';
 
+const API_BASE_URL = 'https://ordexpress-api.onrender.com'; // ¡REEMPLAZA CON LA URL BASE DE TU API!
 
 /**
- * Simula una llamada a la API para autenticar un usuario.
+ * Llama a la API para autenticar un usuario.
  * @param {string} email
  * @param {string} password
- * @returns {Promise<object>} Resuelve con datos del usuario si es exitoso, rechaza con error si falla.
+ * @returns {Promise<object>} Resuelve con los datos de la respuesta de la API (incluyendo el token) si es exitoso,
+ * rechaza con un error si falla.
  */
 export const loginUser = async (email, password) => {
-  console.log(`Attempting login for: ${email}`);
-  // Simula un retraso de red
-  await new Promise(resolve => setTimeout(resolve, 750));
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      email: email,
+      password: password,
+    });
 
-  // Credenciales de ejemplo (¡NUNCA hagas esto en producción!)
-  const validEmail = 'admin@ordexpress.com';
-  const validPassword = 'password123';
+    // La respuesta exitosa de tu API (AuthController.Login) devuelve un objeto con un 'token'
+    return response.data; // Devuelve los datos de la respuesta (incluyendo el token)
+  } catch (error) {
+    // Maneja los errores de la petición
+    let errorMessage = 'Ocurrió un error al iniciar sesión.';
+    if (error.response && error.response.data) {
+      errorMessage = error.response.data; // Muestra el mensaje de error del backend (e.g., "Credenciales inválidas")
+    } else if (error.request) {
+      errorMessage = 'No se pudo conectar con el servidor.';
+    }
+    throw new Error(errorMessage); // Lanza el error para que lo capture el componente LoginPage
+  }
+};
 
-  if (email.toLowerCase() === validEmail && password === validPassword) {
-    console.log('Login successful');
-    // Devuelve datos simulados del usuario o un token
-    return {
-      id: 'admin001',
-      name: 'Admin OrdExpress',
-      email: validEmail,
-      role: 'administrator',
-      // En una app real, aquí vendría un token JWT, por ejemplo:
-      // token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    };
-  } else {
-    console.log('Login failed: Invalid credentials');
-    throw new Error('Correo electrónico o contraseña incorrectos.');
+/**
+ * Llama a la API para registrar un nuevo usuario.
+ * @param {object} userData - Objeto con los datos del nuevo usuario (nombre, email, password, rol, organizationId).
+ * @returns {Promise<object>} Resuelve con los datos de la respuesta de la API si el registro es exitoso,
+ * rechaza con un error si falla.
+ */
+export const registerUser = async (userData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/signin`, userData);
+    return response.data; // Devuelve los datos del usuario registrado
+  } catch (error) {
+    let errorMessage = 'Ocurrió un error al registrar el usuario.';
+    if (error.response && error.response.data) {
+      errorMessage = error.response.data;
+    } else if (error.request) {
+      errorMessage = 'No se pudo conectar con el servidor.';
+    }
+    throw new Error(errorMessage);
   }
 };
