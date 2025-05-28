@@ -3,6 +3,7 @@ import axios from 'axios';
 import Modal from '../components/Modal';
 import '../App.css';
 import Notification from '../components/Notification';
+import { API_BASE_URL } from '../api/url';
 
 function InventoryManagementPage() {
   const [inventory, setInventory] = useState([]);
@@ -15,12 +16,10 @@ function InventoryManagementPage() {
   const [showModal, setShowModal] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', stock: '', price: '', category: '' });
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const default_url = "https://ordexpress-api.onrender.com";
-
+  const base_url = API_BASE_URL
   const [imagen, setImagen] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
-
 
   const showNotification = useCallback((message, type) => {
     setNotification({ message, type });
@@ -29,7 +28,6 @@ function InventoryManagementPage() {
       setNotification({ message: '', type: '' });
     }, duration);
   }, []);
-
 
   const fetchInventory = useCallback(async () => {
     const organizationId = localStorage.getItem('organizationId');
@@ -47,7 +45,7 @@ function InventoryManagementPage() {
         setLoading(false);
         return;
       }
-      const response = await axios.get(`${default_url}/api/Productos/${parsedOrganizationId}/list`);
+      const response = await axios.get(`${base_url}/api/Productos/${parsedOrganizationId}/list`);
       setInventory(response.data);
     } catch (err) {
       console.error("Error fetching inventory:", err);
@@ -56,14 +54,13 @@ function InventoryManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [showNotification, default_url]);
-
+  }, [showNotification, base_url]);
 
   const fetchMetadata = useCallback(async () => {
     try {
       const [statesResponse, categoriesResponse] = await Promise.all([
-        axios.get(`${default_url}/api/Metadata/productStatus`),
-        axios.get(`${default_url}/api/Metadata/productCategory`)
+        axios.get(`${base_url}/api/Metadata/productStatus`),
+        axios.get(`${base_url}/api/Metadata/productCategory`)
       ]);
       setStatesList(statesResponse.data);
       setCategoriesList(categoriesResponse.data);
@@ -71,7 +68,7 @@ function InventoryManagementPage() {
       console.error("Error fetching metadata:", err);
       showNotification("Error al cargar metadatos (categorías/estados).", "error");
     }
-  }, [showNotification, default_url]);
+  }, [showNotification, base_url]);
 
   // useEffect para cargar el inventario y los metadatos al montar el componente
   useEffect(() => {
@@ -113,7 +110,7 @@ function InventoryManagementPage() {
     showNotification('Subiendo imagen...', 'info');
 
     try {
-      const response = await axios.post(`${default_url}/api/Productos/uploadImage`, formData, {
+      const response = await axios.post(`${base_url}/api/Productos/uploadImage`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -173,7 +170,7 @@ function InventoryManagementPage() {
       };
       console.log("Datos del nuevo producto a enviar (handleAddItem):", newProductData); // LOG DE DEBUG
 
-      await axios.post(`${default_url}/api/Productos`, newProductData, {
+      await axios.post(`${base_url}/api/Productos`, newProductData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
@@ -213,7 +210,7 @@ function InventoryManagementPage() {
     if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
 
     try {
-      await axios.delete(`${default_url}/api/Productos/${productId}`, {
+      await axios.delete(`${base_url}/api/Productos/${productId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
       showNotification("Producto eliminado exitosamente.", "success");
@@ -269,7 +266,7 @@ function InventoryManagementPage() {
       console.log("Datos que se enviarán al backend para actualizar (handleUpdateProduct):", productDataToUpdate); // LOG DE DEBUG
 
       // Corrección: Asignar la respuesta de axios.put a una variable 'response'
-      const response = await axios.put(`${default_url}/api/Productos/${productIdToUpdate}`, productDataToUpdate, {
+      const response = await axios.put(`${base_url}/api/Productos/${productIdToUpdate}`, productDataToUpdate, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 

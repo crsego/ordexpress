@@ -3,6 +3,7 @@ import Modal from '../components/Modal';
 import Notification from '../components/Notification';
 import axios from 'axios';
 import '../App.css';
+import { API_BASE_URL } from '../api/url';
 
 function OrganizationManagementPage({ isAuthenticated }) {
   const [organization, setOrganization] = useState(null);
@@ -17,10 +18,7 @@ function OrganizationManagementPage({ isAuthenticated }) {
   const [inviteRole, setInviteRole] = useState('');
   const [rolesList, setRolesList] = useState([]);
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const default_url ="https://ordexpress-api.onrender.com"
-
-
-  
+  const base_url = API_BASE_URL;
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -52,7 +50,7 @@ const fetchOrganization = async () => {
     const token = localStorage.getItem('authToken');
 
     const response = await axios.post(
-      `${default_url}/api/Organizations/info`,
+      `${base_url}/api/Organizations/info`,
       { domainId: parseInt(organizationId) }, // 🔥 Envía el organizationId tomado del localStorage
       {
         headers: {
@@ -83,7 +81,7 @@ const fetchOrganization = async () => {
       const token = localStorage.getItem('authToken');
   
       const response = await axios.get(
-        `${default_url}/api/Metadata/roles`,
+        `${base_url}/api/Metadata/roles`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -95,8 +93,6 @@ const fetchOrganization = async () => {
     }
   };
   
-
-
   const handleEditOrganization = (organization) => {
     setEditingOrgId(organization.domainId);
     setEditedOrgName(organization.name);
@@ -114,7 +110,7 @@ const fetchOrganization = async () => {
         status: editedOrgStatus,
         mesas: [], // Añadir la propiedad 'mesas' con un array vacío
       };
-      await axios.put(`${default_url}/api/Organizations/${editingOrgId}`, updatedOrg, {
+      await axios.put(`${base_url}/api/Organizations/${editingOrgId}`, updatedOrg, {
         headers: {
           Authorization: `Bearer ${token}`, // Usa el token obtenido justo antes de la petición
         },
@@ -155,7 +151,7 @@ const fetchOrganization = async () => {
       const token = localStorage.getItem('authToken');
   
       await axios.post(
-        `${default_url}/api/Usuarios/invitar`,
+        `${base_url}/api/Usuarios/invitar`,
         {
           email: inviteEmail,
           rol: inviteRole,
@@ -177,16 +173,11 @@ const fetchOrganization = async () => {
       showNotification("Error al enviar la invitación.", "error");
     }
   };
-  
-  
 
   if (loading) return <p>Cargando organizaciones...</p>;
   if (error) return <div className="error-message">{error}</div>;
 
   return (
-
-    
-    
     <div className="organization-page">
 
     <h2>{organization.name}</h2>
@@ -200,7 +191,6 @@ const fetchOrganization = async () => {
       type={notification.type}
       onClose={() => setNotification({ message: '', type: '' })}
     />
-
 
     {organization && organization.usuarios && organization.usuarios.length > 0 ? (
       <table className="usuarios-table">

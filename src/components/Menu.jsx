@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Modal from './Modal';
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api/url";
 
 const Menu = () => {
   const [productsList, setProductsList] = useState([]);
@@ -14,7 +15,7 @@ const Menu = () => {
   const [quantity, setQuantity] = useState(1);
   const [loadingToken, setLoadingToken] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
-  const default_url = "https://ordexpress-api.onrender.com";
+  const base_url = API_BASE_URL;
 
   // Corrección: Desestructurar 'search' directamente de useLocation()
   const { search } = useLocation();
@@ -32,7 +33,7 @@ const Menu = () => {
         return;
       }
 
-      const url = `${default_url}/api/Productos/${parseInt(organizationId, 10)}/list`;
+      const url = `${base_url}/api/Productos/${parseInt(organizationId, 10)}/list`;
       const response = await axios.get(url);
       console.log("✅ Productos cargados:", response.data);
 
@@ -45,7 +46,7 @@ const Menu = () => {
     } finally {
       setLoadingProducts(false);
     }
-  }, [default_url]); // Solo default_url como dependencia, haciendo que fetchProducts sea estable.
+  }, [base_url]); // Solo default_url como dependencia, haciendo que fetchProducts sea estable.
 
   // useEffect para la carga inicial y manejo del token
   useEffect(() => {
@@ -59,7 +60,7 @@ const Menu = () => {
       if (token && !localStorage.getItem("mesaId")) {
         setLoadingToken(true);
         try {
-          const response = await axios.post(`${default_url}/api/mesas/token`, { token });
+          const response = await axios.post(`${base_url}/api/mesas/token`, { token });
           if (!isMounted) return; // Si el componente se desmontó, no actualizamos el estado
           const { mesaId, organizationId } = response.data;
           localStorage.setItem("mesaId", mesaId);
@@ -88,7 +89,7 @@ const Menu = () => {
     return () => {
       isMounted = false; // Función de limpieza: establece la bandera en falso cuando el componente se desmonta
     };
-  }, [default_url, navigate, search, fetchProducts]); // Corrección: 'search' en lugar de 'query'
+  }, [base_url, navigate, search, fetchProducts]); // Corrección: 'search' en lugar de 'query'
 
   const handleCategoryClick = (categoria) => {
     setSelectedCategory(categoria);
@@ -125,7 +126,7 @@ const Menu = () => {
 
       console.log("🚀 DTO que enviamos al backend:", dto);
 
-      const response = await axios.post(`${default_url}/api/Pedidos/agregar-producto`, dto);
+      const response = await axios.post(`${base_url}/api/Pedidos/agregar-producto`, dto);
       const nuevoPedidoId = response.data.pedidoId;
       localStorage.setItem("pedidoId", nuevoPedidoId);
 

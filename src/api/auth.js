@@ -1,7 +1,8 @@
 // src/api/auth.js
 import axios from 'axios';
+import { API_BASE_URL } from './url';
 
-const API_BASE_URL = 'https://ordexpress-api.onrender.com'; // ¡REEMPLAZA CON LA URL BASE DE TU API!
+const base_url = API_BASE_URL; // ¡REEMPLAZA CON LA URL BASE DE TU API!
 
 /**
  * Llama a la API para autenticar un usuario.

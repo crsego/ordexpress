@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Notification from '../components/Notification'; // 🔥 Asegúrate que tengas este componente de notificaciones
+import { API_BASE_URL } from '../api/url';
 
 const RegisterPage = () => {
   const location = useLocation();
@@ -14,8 +15,7 @@ const RegisterPage = () => {
   const [isInvitation, setIsInvitation] = useState(false); // 🔥 Ahora sí
 
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const default_url ="https://ordexpress-api.onrender.com"
-
+  const base_url = API_BASE_URL;
   const showNotification = (message, type) => {
     setNotification({ message, type });
     setTimeout(() => {
@@ -56,7 +56,7 @@ const RegisterPage = () => {
         organizationId: organizationId !== null ? organizationId : null
       };
   
-      const response = await axios.post(`${default_url}/auth/signin`, payload);
+      const response = await axios.post(`${base_url}/auth/signin`, payload);
   
       console.log("Registro exitoso:", response.data);
   

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../App.css';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../api/url';
+import Modal from 'react-modal';
 
 function TableManagementPage() {
   const [tables, setTables] = useState([]);
@@ -12,8 +14,10 @@ function TableManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [qrTokens, setQrTokens] = useState({});
   const [qrCodes, setQrCodes] = useState({});
-  const default_url = "https://ordexpress-api.onrender.com";
+  const base_url = API_BASE_URL;
   const navigate = useNavigate();
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const possibleStatus = [
     { label: 'Libre', value: 'FREE' },
@@ -23,6 +27,16 @@ function TableManagementPage() {
     { label: 'Inactiva', value: 'INACTIVE' }
   ];
 
+  // useEffect(() => {
+  //   const orgId = localStorage.getItem('organizationId');
+  //   if (orgId) {
+  //     fetchTables(orgId);
+  //   } else {
+  //     setError("No se encontró organización activa.");
+  //     setLoading(false);
+  //   }
+  // }, []);
+
   useEffect(() => {
     const orgId = localStorage.getItem('organizationId');
     if (orgId) {
@@ -31,14 +45,20 @@ function TableManagementPage() {
       setError("No se encontró organización activa.");
       setLoading(false);
     }
-  }, []);
+    if (selectedTable?.qrImage) {
+      setQrCodes(prev => ({
+        ...prev,
+        [selectedTable.id]: selectedTable.qrImage
+      }));
+    }
+  }, [selectedTable]);
 
   const fetchTables = async (orgId) => {
     setLoading(true);
     setError(null);
     console.log(`Fetching tables for organization ${orgId} from API...`);
     try {
-      const response = await axios.get(`${default_url}/api/Mesas/${orgId}/list`);
+      const response = await axios.get(`${base_url}/api/Mesas/${orgId}/list`);
       console.log("Tables fetched from API:", response.data);
       setTables(response.data);
       const initialTokens = {};
@@ -85,7 +105,7 @@ function TableManagementPage() {
     console.log(`Updating table ${tableId} in organization ${orgId} to status ${newStatusValue} via API`);
     try {
       const response = await axios.put(
-        `${default_url}/api/Mesas/${orgId}/${tableId}`,
+        `${base_url}/api/Mesas/${orgId}/${tableId}`,
         {
           id: tableId,
           organizationId: parseInt(orgId, 10),
@@ -111,7 +131,7 @@ function TableManagementPage() {
         estado: 'FREE',
       };
 
-      const response = await axios.post(`${default_url}/api/Mesas`, newMesa);
+      const response = await axios.post(`${base_url}/api/Mesas`, newMesa);
       console.log("Mesa creada:", response.data);
       fetchTables(orgId);
       setNewItemNumber('');
@@ -126,7 +146,7 @@ function TableManagementPage() {
   const generateQrCode = async (mesaId) => {
     setError(null);
     try {
-      const response = await axios.post(`${default_url}/api/Mesas/mesas/${mesaId}/generar-qr`);
+      const response = await axios.post(`${base_url}/api/Mesas/mesas/${mesaId}/generar-qr`);
       console.log(`QR code generated for mesa ${mesaId}:`, response.data);
       setQrCodes(prevQrCodes => ({
         ...prevQrCodes,
@@ -151,6 +171,33 @@ function TableManagementPage() {
       setError("No se encontró token QR para esta mesa.");
     }
   };
+
+  const openModal = (table) => {
+    setSelectedTable(table);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedTable(null);
+    setModalIsOpen(false);
+  };
+
+  const downloadQr = (mesaId) => {
+    const svg = document.querySelector(`#qr-img-${mesaId} svg`);
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `qr_mesa_${mesaId}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
 
   if (loading) return <p>Cargando mesas...</p>;
   if (error) return <div className="error-message">{error}</div>;
@@ -184,12 +231,11 @@ function TableManagementPage() {
               <th>Número Mesa</th>
               <th>Estado Actual</th>
               <th>Actualizar Estado</th>
-              <th>Código QR</th> {/* Esta columna ahora contendrá el QR y sus botones */}
             </tr>
           </thead>
           <tbody>
             {tables.map(table => (
-              <tr key={table.id} className={updatingTableId === table.id ? 'updating' : ''}>
+              <tr key={table.id} onClick={() => openModal(table)}>
                 <td>Mesa {table.numero}</td>
                 <td>
                   {possibleStatus.find(s => s.value === table.estado)?.label || table.estado}
@@ -206,50 +252,42 @@ function TableManagementPage() {
                   </select>
                   {updatingTableId === table.id && <span style={{ marginLeft: '8px' }}>🔄</span>}
                 </td>
-                {/* Columna de Código QR y Acciones consolidada */}
-                <td style={{ textAlign: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                    {qrCodes[table.id] ? (
-                      <>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: qrCodes[table.id] }}
-                          style={{ maxWidth: '80px', height: 'auto', alignSelf: 'flex-start', marginBottom: '10px' }} // Cambiado 'margin: 0 auto' a 'alignSelf: flex-start'
-                        />
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', width: '100%' }}>
-                          <button
-                            onClick={() => simulateQrScan(qrTokens[table.id])}
-                            className="add-button"
-                            style={{ padding: '8px 12px', fontSize: '0.8em' }}
-                          >
-                            Simular Escaneo
-                          </button>
-                          <button
-                            onClick={() => generateQrCode(table.id)}
-                            className="edit-button"
-                          >
-                            Regenerar QR
-                          </button>
-                        </div>
-                        <span style={{ fontSize: '0.8em', color: 'green', marginTop: '5px' }}>QR Generado</span>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => generateQrCode(table.id)}
-                        className="edit-button"
-                        
-                      >
-                        Generar QR
-                      </button>
-                    )}
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
+            <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Detalle de Mesa" style={{ content: { width: '400px', margin: 'auto' } }}>
+              {selectedTable && (
+                <div>
+                  <h2>Mesa {selectedTable.numero}</h2>
+                  <p><strong>Estado:</strong> {selectedTable.estado}</p>
+                  <div style={{ marginBottom: '10px', height: '120px' }}>
+                    {qrCodes[selectedTable.id] ? (
+                      <div id={`qr-img-${selectedTable.id}`} dangerouslySetInnerHTML={{ __html: qrCodes[selectedTable.id] }} />
+                    ) : (
+                      <p>No hay código QR generado aún.</p>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <button className="edit-button" onClick={() => generateQrCode(selectedTable.id)}>
+                      {qrCodes[selectedTable.id] ? 'Renovar QR' : 'Generar QR'}
+                    </button>
+                    {qrCodes[selectedTable.id] && (
+                      <button className="add-button" onClick={() => downloadQr(selectedTable.id)}>Descargar QR</button>
+                    )}
+                  </div>
+                  <div style={{ marginTop: '20px' }}>
+                    <button className="cancel-button" onClick={closeModal}>Cerrar</button>
+                  </div>
+                </div>
+              )}
+            </Modal>
         </table>
+        
       )}
     </div>
   );
 }
 
 export default TableManagementPage;
+
+
