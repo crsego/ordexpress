@@ -51,6 +51,17 @@
     color: #555;
     font-size: 0.9rem;
   }
+
+  .form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box; /* Importante para que el padding no aumente el ancho */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
   
   .form-group input {
     width: 100%;

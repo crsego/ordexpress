@@ -35,13 +35,12 @@ function LoginPage({ onLoginSuccess }) {
   
       const nombre = userData.nombre;
       const token = userData.token;
-      const rol = userData.rol; // 👈 Aquí ya capturaste el rol
+      const rol = userData.rol;
       const organizationId = userData.organizationId;
   
       localStorage.setItem('authToken', token);
       localStorage.setItem('organizationId', organizationId);
-      localStorage.setItem('userRol', rol); // 🔥 Agregar esta línea faltante
-  
+      localStorage.setItem('userRol', rol); 
       onLoginSuccess(userData);
   
     } catch (err) {
@@ -89,8 +88,6 @@ function LoginPage({ onLoginSuccess }) {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
-        {/* Puedes añadir un enlace tipo "¿Olvidaste tu contraseña?" si lo necesitas */}
-        {/* <p className="forgot-password"><a href="#">¿Olvidaste tu contraseña?</a></p> */}
       </div>
     </div>
   );

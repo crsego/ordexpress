@@ -190,11 +190,10 @@ const fetchOrganization = async () => {
     <div className="organization-page">
 
     <h2>{organization.name}</h2>
-    <p><strong>ID:</strong> {organization.domainId}</p>
     <p><strong>Estado:</strong> {organization.status}</p>
 
     <h3>Usuarios de la Organización</h3>
-    <button onClick={() => setShowInviteModal(true)} style={{ marginBottom: '20px' }}>Invitar Usuario</button>
+    <button className='edit-button' onClick={() => setShowInviteModal(true)}>Invitar Usuario</button>
 
     <Notification
       message={notification.message}

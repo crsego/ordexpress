@@ -13,11 +13,10 @@ function DashboardLayout({ onLogout }) {
     const organizationId = localStorage.getItem('organizationId');
     const rol = localStorage.getItem('userRol');
 
-    // 🔥 Agregamos console.log para ver qué trae exactamente
     console.log('organizationId:', organizationId);
     console.log('userRol:', rol);
 
-    // 🔥 Cambiamos la condición: si NO hay organización, mostrar formulario
+    
     if (!organizationId || organizationId === "0" || organizationId === "null") {
       setShouldCreateOrganization(true);
     } else {
@@ -30,8 +29,8 @@ function DashboardLayout({ onLogout }) {
   const handleOrganizationCreated = (newOrgId) => {
     localStorage.setItem('organizationId', newOrgId);
     setShouldCreateOrganization(false);
-    // 🔥 NO hacemos navigate, solo dejamos que el dashboard se actualice
-    window.location.reload(); // (Si quieres evitar recargar también te enseño)
+    
+    window.location.reload();
   };
 
   if (loading) {

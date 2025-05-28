@@ -158,8 +158,6 @@ function TableManagementPage() {
   return (
     <div>
       <h2>Gestión de Mesas</h2>
-
-      {/* Formulario para crear una nueva mesa */}
       <div className="new-item-container">
         <h3>Crear Nueva Mesa</h3>
         <div className="new-item-form">
@@ -227,8 +225,7 @@ function TableManagementPage() {
                           </button>
                           <button
                             onClick={() => generateQrCode(table.id)}
-                            className="add-button"
-                            style={{ padding: '8px 12px', fontSize: '0.8em' }}
+                            className="edit-button"
                           >
                             Regenerar QR
                           </button>
@@ -238,8 +235,8 @@ function TableManagementPage() {
                     ) : (
                       <button
                         onClick={() => generateQrCode(table.id)}
-                        className="add-button"
-                        style={{ padding: '8px 12px', fontSize: '0.8em' }}
+                        className="edit-button"
+                        
                       >
                         Generar QR
                       </button>

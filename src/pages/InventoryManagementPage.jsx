@@ -17,21 +17,20 @@ function InventoryManagementPage() {
   const [notification, setNotification] = useState({ message: '', type: '' });
   const default_url = "https://ordexpress-api.onrender.com";
 
-  const [imagen, setImagen] = useState(null); // Archivo de imagen seleccionado
-  const [previewImageUrl, setPreviewImageUrl] = useState(''); // URL para la vista previa en los modales
-  const [uploadingImage, setUploadingImage] = useState(false); // Estado para indicar si se está subiendo la imagen
+  const [imagen, setImagen] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Función para mostrar notificaciones, envuelta en useCallback para optimización
+
   const showNotification = useCallback((message, type) => {
     setNotification({ message, type });
-    // Duración de la notificación basada en la longitud del mensaje
     const duration = message.length > 100 ? 5000 : 3000;
     setTimeout(() => {
       setNotification({ message: '', type: '' });
     }, duration);
   }, []);
 
-  // Función para obtener el inventario, envuelta en useCallback
+
   const fetchInventory = useCallback(async () => {
     const organizationId = localStorage.getItem('organizationId');
     if (!organizationId) {
@@ -41,7 +40,7 @@ function InventoryManagementPage() {
     }
     setLoading(true);
     try {
-      // Corrección: Asegurarse de que organizationId sea un número entero
+
       const parsedOrganizationId = parseInt(organizationId, 10);
       if (isNaN(parsedOrganizationId)) {
         setError("ID de organización inválido.");
@@ -59,7 +58,7 @@ function InventoryManagementPage() {
     }
   }, [showNotification, default_url]);
 
-  // Función para obtener metadatos (estados y categorías), envuelta en useCallback
+
   const fetchMetadata = useCallback(async () => {
     try {
       const [statesResponse, categoriesResponse] = await Promise.all([
@@ -344,54 +343,163 @@ function InventoryManagementPage() {
       }}>
         <h3>Nuevo Producto</h3>
 
-        {/* Campos del formulario para nuevo producto */}
-        <input
-          type="text"
-          placeholder="Nombre del Ítem"
-          value={newItem.name}
-          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          style={{ marginBottom: '10px', width: '100%' }}
-        />
-        <input
-          type="number"
-          placeholder="Stock Inicial"
-          value={newItem.stock}
-          onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
-          style={{ marginBottom: '10px', width: '100%' }}
-        />
-        <input
-          type="number"
-          placeholder="Precio (COP)"
-          value={newItem.price}
-          onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-          style={{ marginBottom: '10px', width: '100%' }}
-        />
-        <select
-          value={newItem.category}
-          onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-          style={{ marginBottom: '10px', width: '100%' }}
-        >
-          <option value="">Seleccione Categoría</option>
-          {categoriesList.map(cat => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Sección para subir imagen en el modal de añadir */}
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="imagenProductoNuevo" style={{ display: 'block', marginBottom: '5px' }}>Seleccionar Imagen:</label>
+        <div className='form-group'>
           <input
-            type="file"
-            id="imagenProductoNuevo"
-            accept="image/*"
-            onChange={handleImagenChange}
-            style={{ width: '100%' }}
+            type="text"
+            placeholder="Nombre del Ítem"
+            value={newItem.name}
+            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+            style={{ marginBottom: '10px', width: '100%' }}
           />
+          <input
+            type="number"
+            placeholder="Stock Inicial"
+            value={newItem.stock}
+            onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
+            style={{ marginBottom: '10px', width: '100%' }}
+          />
+          <input
+            type="number"
+            placeholder="Precio (COP)"
+            value={newItem.price}
+            onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+            style={{ marginBottom: '10px', width: '100%' }}
+          />
+          <select
+            value={newItem.category}
+            onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+            style={{ marginBottom: '10px', width: '100%' }}
+          >
+            <option value="">Seleccione Categoría</option>
+            {categoriesList.map(cat => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {imagen && ( // Muestra el botón de subir solo si hay una imagen seleccionada
+        {/* Sección para subir imagen en el modal de añadir */}
+        <div style={{ marginBottom: '20px' }}>
+          <label
+            htmlFor="imagenProductoNuevo"
+            style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '500',
+              color: '#2d3748',
+              fontSize: '0.875rem'
+            }}
+          >
+            Seleccionar Imagen:
+          </label>
+
+          <div
+            style={{
+              position: 'relative',
+              border: '2px dashed #cbd5e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              transition: 'all 0.2s ease',
+              backgroundColor: '#f7fafc',
+              ':hover': {
+                borderColor: '#4299e1',
+                backgroundColor: '#ebf8ff'
+              }
+            }}
+          >
+            <input
+              type="file"
+              id="imagenProductoNuevo"
+              accept="image/*"
+              onChange={handleImagenChange}
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                cursor: 'pointer',
+                top: 0,
+                left: 0
+              }}
+            />
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#718096"
+                style={{ marginBottom: '8px' }}
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+
+              <span style={{
+                color: '#4299e1',
+                fontWeight: '500',
+                fontSize: '0.875rem'
+              }}>
+                Haz click para subir
+              </span>
+
+              <span style={{
+                color: '#718096',
+                fontSize: '0.75rem'
+              }}>
+                Formatos soportados: JPEG, PNG, WEBP (max. 5MB)
+              </span>
+            </div>
+          </div>
+
+          {previewImageUrl && (
+            <div style={{
+              marginTop: '1rem',
+              position: 'relative',
+              display: 'inline-block'
+            }}>
+              <img
+                src={previewImageUrl}
+                alt="Previsualización"
+                style={{
+                  maxWidth: '200px',
+                  borderRadius: '4px',
+                  border: '1px solid #e2e8f0'
+                }}
+              />
+              <button
+                onClick={() => setPreviewImageUrl(null)}
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  background: 'rgba(0,0,0,0.6)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* {imagen && ( // Muestra el botón de subir solo si hay una imagen seleccionada
           <button
             type="button"
             onClick={async () => {
@@ -411,11 +519,11 @@ function InventoryManagementPage() {
           <div style={{ marginBottom: '10px' }}>
             <p style={{ margin: '0 0 5px 0' }}>Vista previa:</p>
             <img src={previewImageUrl} alt="Vista previa" style={{ maxWidth: '100px', maxHeight: '100px', border: '1px solid #ddd', objectFit: 'cover' }}
-                 onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/cccccc/000000?text=Error'; console.error("Error al cargar vista previa. URL:", previewImageUrl); }}
+              onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/cccccc/000000?text=Error'; console.error("Error al cargar vista previa. URL:", previewImageUrl); }}
             />
             {console.log("Renderizando vista previa con URL:", previewImageUrl)}
           </div>
-        )}
+        )} */}
 
         {/* Botón para guardar el nuevo producto */}
         <button onClick={handleAddItem} className="save-button" disabled={uploadingImage}>
@@ -431,7 +539,7 @@ function InventoryManagementPage() {
         setPreviewImageUrl(''); // Limpiamos la URL de la vista previa al cerrar el modal
       }}>
         {editingProduct && ( // Solo muestra el contenido si hay un producto en edición
-          <div>
+          <div className='form-group'>
             <h3>Editar Producto</h3>
             {/* Campos del formulario para editar producto */}
             <input
@@ -479,14 +587,84 @@ function InventoryManagementPage() {
 
             {/* Sección para cambiar imagen en el modal de edición */}
             <div style={{ marginBottom: '10px' }}>
-              <label htmlFor="editImagenProducto" style={{ display: 'block', marginBottom: '5px' }}>Cambiar Imagen:</label>
-              <input
-                type="file"
-                id="editImagenProducto"
-                accept="image/*"
-                onChange={handleImagenChange}
-                style={{ width: '100%' }}
-              />
+            <label
+            htmlFor="imagenProductoNuevo"
+            style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '500',
+              color: '#2d3748',
+              fontSize: '0.875rem'
+            }}
+          >
+            Cambiar Imagen:
+          </label>
+
+          <div
+            style={{
+              position: 'relative',
+              border: '2px dashed #cbd5e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              transition: 'all 0.2s ease',
+              backgroundColor: '#f7fafc',
+              ':hover': {
+                borderColor: '#4299e1',
+                backgroundColor: '#ebf8ff'
+              }
+            }}
+          >
+            <input
+              type="file"
+              id="imagenProductoNuevo"
+              accept="image/*"
+              onChange={handleImagenChange}
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                cursor: 'pointer',
+                top: 0,
+                left: 0
+              }}
+            />
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#718096"
+                style={{ marginBottom: '8px' }}
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+
+              <span style={{
+                color: '#4299e1',
+                fontWeight: '500',
+                fontSize: '0.875rem'
+              }}>
+                Haz click para subir
+              </span>
+
+              <span style={{
+                color: '#718096',
+                fontSize: '0.75rem'
+              }}>
+                Formatos soportados: JPEG, PNG, WEBP (max. 5MB)
+              </span>
+            </div>
+          </div>
             </div>
 
             {imagen && ( // Muestra el botón de subir nueva imagen solo si hay una seleccionada

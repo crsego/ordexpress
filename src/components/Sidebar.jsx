@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import '../styles/Sidebar.css'; // Para estilos
+import '../styles/Sidebar.css';
 
 function Sidebar({ onLogout }) {
   const navigate = useNavigate();
@@ -14,31 +14,29 @@ function Sidebar({ onLogout }) {
 
   return (
     <aside className="sidebar">
-      <h1 className="sidebar-title">OrdExpress Admin</h1>
+      <h1 className="sidebar-title">Admin</h1>
       <nav>
         <ul>
           <li>
             <NavLink to="/admin/orders" className={({ isActive }) => isActive ? 'active-link' : ''}>
-              Gestión de Pedidos
+              Gestión Pedidos
             </NavLink>
           </li>
           <li>
             <NavLink to="/admin/inventory" className={({ isActive }) => isActive ? 'active-link' : ''}>
-              Gestión de Inventario
+              Gestión Inventario
             </NavLink>
           </li>
           <li>
             <NavLink to="/admin/tables" className={({ isActive }) => isActive ? 'active-link' : ''}>
-              Gestión de Mesas
+              Gestión Mesas
             </NavLink>
           </li>
-          {/* Nuevo enlace para la gestión de organizaciones */}
           <li>
             <NavLink to="/admin/organizations" className={({ isActive }) => isActive ? 'active-link' : ''}>
-              Gestión de Organizaciones
+              Gestión Organizacion
             </NavLink>
           </li>
-          {/* Puedes añadir más enlaces aquí */}
         </ul>
       </nav>
       <div className="sidebar-logout">

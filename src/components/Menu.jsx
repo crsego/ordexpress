@@ -14,7 +14,7 @@ const Menu = () => {
   const [quantity, setQuantity] = useState(1);
   const [loadingToken, setLoadingToken] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
-  const default_url ="https://ordexpress-api.onrender.com";
+  const default_url = "https://ordexpress-api.onrender.com";
 
   // Corrección: Desestructurar 'search' directamente de useLocation()
   const { search } = useLocation();
@@ -160,61 +160,144 @@ const Menu = () => {
       ) : errorProducts ? (
         <p style={{ color: 'red', textAlign: 'center' }}>{errorProducts}</p>
       ) : (
-        <div className="product-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        <div className="product-list" style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '25px',
+          padding: '20px',
+        }}>
           {filteredProducts.map((product) => (
             <div
               key={product.productoId}
               onClick={() => openAddProductModal(product)}
               style={{
-                border: '1px solid #eee',
+                display: 'flex',
+                gap: '15px',
+                border: '1px solid #e2e8f0',
                 padding: '15px',
-                borderRadius: '8px',
-                textAlign: 'center',
+                borderRadius: '12px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s ease-in-out',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backgroundColor: 'white',
+                overflow: 'hidden',
+                ':hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  borderColor: '#cbd5e1'
+                }
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {/* Aquí es donde se renderiza la imagen */}
-              {product.imageUrl ? (
+              {/* Contenedor de imagen izquierda */}
+              <div style={{
+                width: '120px',
+                minWidth: '120px',
+                height: '120px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                position: 'relative',
+                backgroundColor: '#f1f5f9'
+              }}>
                 <img
-                  src={product.imageUrl}
+                  src={product.imageUrl || 'https://placehold.co/120x120/cccccc/000000?text=Sin+Imagen'}
                   alt={product.nombre}
                   style={{
-                    maxWidth: '100%',
-                    height: 'auto',
-                    maxHeight: '150px',
+                    width: '100%',
+                    height: '100%',
                     objectFit: 'cover',
-                    marginBottom: '10px',
-                    borderRadius: '4px',
+                    transition: 'transform 0.3s ease'
                   }}
                   onError={(e) => {
-                    e.target.onerror = null; // Evita bucles infinitos de error
-                    e.target.src = 'https://placehold.co/150x150/cccccc/000000?text=Sin+Imagen'; // Imagen de fallback
-                    console.error("Error al cargar imagen para:", product.nombre, "URL:", product.imageUrl);
+                    e.target.onerror = null;
+                    e.target.src = 'https://placehold.co/120x120/cccccc/000000?text=Sin+Imagen';
                   }}
                 />
-              ) : (
-                <img
-                  src="https://placehold.co/150x150/cccccc/000000?text=Sin+Imagen"
-                  alt="Sin imagen disponible"
-                  style={{
-                    maxWidth: '100%',
-                    height: 'auto',
-                    maxHeight: '150px',
-                    objectFit: 'cover',
-                    marginBottom: '10px',
-                    borderRadius: '4px',
-                  }}
-                />
-              )}
-              <h3>{product.nombre}</h3>
-              <p style={{ color: 'green', fontWeight: 'bold' }}>${product.precio != null ? product.precio.toLocaleString() : '0'}</p>
-              <button className="inventory-button" style={{ marginTop: '10px', padding: '8px 15px', borderRadius: '5px', border: 'none', backgroundColor: '#4CAF50', color: 'white', cursor: 'pointer' }}>
-                Agregar
-              </button>
+                
+                {/* Badge de stock */}
+                {product.stock && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '8px',
+                    backgroundColor: 'rgba(52, 211, 153, 0.9)',
+                    color: 'white',
+                    padding: '3px 8px',
+                    borderRadius: '20px',
+                    fontSize: '0.7rem',
+                    fontWeight: '600',
+                    backdropFilter: 'blur(2px)'
+                  }}>
+                    {product.stock} unidades
+                  </div>
+                )}
+              </div>
+        
+              {/* Contenido derecho */}
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                padding: '5px 0'
+              }}>
+                <div>
+                  <h3 style={{
+                    margin: '0 0 8px 0',
+                    color: '#1e293b',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    lineHeight: '1.3',
+                    textAlign: 'left'
+                  }}>
+                    {product.nombre}
+                  </h3>
+                  
+                  <p style={{ 
+                    color: '#64748b',
+                    fontSize: '0.85rem',
+                    margin: '0',
+                    textAlign: 'left',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}>
+                    {product.descripcion || 'Sin descripción disponible'}
+                  </p>
+                </div>
+        
+                <div>
+                  <p style={{ 
+                    color: '#10b981', 
+                    fontWeight: '700',
+                    fontSize: '1.1rem',
+                    margin: '10px 0 15px 0',
+                    textAlign: 'left'
+                  }}>
+                    ${product.precio?.toLocaleString() || '0'}
+                  </p>
+                  
+                  <button 
+                    style={{ 
+                      width: '100%',
+                      padding: '8px 15px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease',
+                      ':hover': {
+                        backgroundColor: '#2563eb',
+                        transform: 'scale(1.02)'
+                      }
+                    }}
+                  >
+                    Agregar al carrito
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

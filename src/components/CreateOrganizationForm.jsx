@@ -1,4 +1,3 @@
-// src/components/CreateOrganizationForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -58,11 +57,11 @@ function CreateOrganizationForm({ onOrganizationCreated }) {
         placeholder="Nombre de la organización"
         style={{ padding: '8px', marginRight: '10px', width: '250px' }}
       />
-      <button onClick={handleCreateOrganization} disabled={loading}>
+      <button className='save-button' onClick={handleCreateOrganization} disabled={loading}>
         {loading ? 'Creando...' : 'Crear Organización'}
       </button>
     </div>
   );
 }
 
-export default CreateOrganizationForm; // 🔥 ¡NO OLVIDES este export default!
+export default CreateOrganizationForm; 
