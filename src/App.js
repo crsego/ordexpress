@@ -12,7 +12,7 @@ import "./App.css";
 import logo from "./assets/ordexpress.png";
 
 const Menu = React.lazy(() => import("./components/Menu"));
-const CartModal = React.lazy(() => import("./components/Cart"));
+const CartModal = React.lazy(() => import("./components/CartModal"));
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-CO', {
@@ -207,17 +207,7 @@ const App = () => {
         <Route path="/about" element={<QuienesSomos />} />
       </Routes>
 
-      <Suspense fallback={<div>Cargando carrito...</div>}>
-        {isModalOpen && (
-          <CartModal
-            cart={cart}
-            dispatch={dispatch}
-            onClose={() => setIsModalOpen(false)}
-            total={total}
-            formatCurrency={formatCurrency}
-          />
-        )}
-      </Suspense>
+      
     </div>
   );
 };
