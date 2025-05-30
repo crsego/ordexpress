@@ -3,6 +3,7 @@ import Modal from './Modal';
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api/url";
+import CartModal from "./Cart";
 
 const Menu = () => {
   const [productsList, setProductsList] = useState([]);
@@ -15,6 +16,8 @@ const Menu = () => {
   const [quantity, setQuantity] = useState(1);
   const [loadingToken, setLoadingToken] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [itemsDelCarrito, setItemsDelCarrito] = useState([]);
+  const [mostrarCarrito, setMostrarCarrito] = useState(false);
   const base_url = API_BASE_URL;
 
   // Corrección: Desestructurar 'search' directamente de useLocation()
@@ -107,6 +110,56 @@ const Menu = () => {
     setShowAddModal(true);
   };
 
+  const manejarAgregarAlCarrito = (productoAgregado) => {
+    const precioNumerico = parseFloat(productoAgregado.precio);
+    if (isNaN(precioNumerico)) {
+      console.warn("El producto tiene un precio inválido y no se puede agregar:", productoAgregado);
+      alert("Este producto no tiene un precio válido y no puede ser agregado al carrito.");
+      return;
+    }
+
+    setItemsDelCarrito(prevItems => {
+      const itemExistente = prevItems.find(item => item.productoId === productoAgregado.productoId);
+      if (itemExistente) {
+        return prevItems.map(item =>
+          item.productoId === productoAgregado.productoId
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
+        );
+      } else {
+        return [...prevItems, { ...productoAgregado, precio: precioNumerico, cantidad: 1 }];
+      }
+    });
+  };
+
+  const manejarIncrementarCantidad = (productoId) => {
+    setItemsDelCarrito(prevItems =>
+      prevItems.map(item =>
+        item.productoId === productoId
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      )
+    );
+  };
+
+  const manejarReducirCantidad = (productoId) => {
+    setItemsDelCarrito(prevItems => {
+      const itemActual = prevItems.find(item => item.productoId === productoId);
+      if (itemActual && itemActual.cantidad === 1) {
+        // Eliminar el item si la cantidad es 1 y se reduce
+        return prevItems.filter(item => item.productoId !== productoId);
+      } else {
+        // Reducir la cantidad
+        return prevItems.map(item =>
+          item.productoId === productoId
+            ? { ...item, cantidad: Math.max(0, item.cantidad - 1) } // Evita cantidades negativas
+            : item
+        );
+      }
+    });
+  };
+
+
   const handleConfirmAddProduct = async () => {
     const mesaId = localStorage.getItem("mesaId");
     const pedidoId = localStorage.getItem("pedidoId");
@@ -161,7 +214,7 @@ const Menu = () => {
       ) : errorProducts ? (
         <p style={{ color: 'red', textAlign: 'center' }}>{errorProducts}</p>
       ) : (
-        <div className="product-list" style={{ 
+        <div className="product-list" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
           gap: '25px',
@@ -170,9 +223,12 @@ const Menu = () => {
           {filteredProducts.map((product) => (
             <div
               key={product.productoId}
-              onClick={() => openAddProductModal(product)}
+              // El onClick original abre un modal. Decide si también debe agregar al carrito
+              // o si solo el botón "Agregar al carrito" lo hace.
+              // onClick={() => openAddProductModal(product)} 
               style={{
                 display: 'flex',
+                flexDirection: 'column', // Ajustado para que el botón quede al final consistentemente
                 gap: '15px',
                 border: '1px solid #e2e8f0',
                 padding: '15px',
@@ -182,25 +238,34 @@ const Menu = () => {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 backgroundColor: 'white',
                 overflow: 'hidden',
-                ':hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  borderColor: '#cbd5e1'
-                }
+                // ':hover': { // Pseudo-clases como :hover no funcionan en inline styles directamente.
+                //                // Necesitarías manejo de estado (onMouseEnter, onMouseLeave) o CSS/CSS-in-JS.
+                // }
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.07)';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
               }}
             >
               {/* Contenedor de imagen izquierda */}
-              <div style={{
-                width: '120px',
-                minWidth: '120px',
-                height: '120px',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                position: 'relative',
-                backgroundColor: '#f1f5f9'
-              }}>
+              <div
+                onClick={() => openAddProductModal(product)} // Si quieres que la imagen también abra el modal
+                style={{
+                  width: '100%', // Ajustado para que ocupe el ancho
+                  height: '180px', // Altura ejemplo
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  backgroundColor: '#f1f5f9'
+                }}>
                 <img
-                  src={product.imageUrl || 'https://placehold.co/120x120/cccccc/000000?text=Sin+Imagen'}
+                  src={product.imageUrl || 'https://placehold.co/300x180/cccccc/000000?text=Sin+Imagen'}
                   alt={product.nombre}
                   style={{
                     width: '100%',
@@ -210,17 +275,15 @@ const Menu = () => {
                   }}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://placehold.co/120x120/cccccc/000000?text=Sin+Imagen';
+                    e.target.src = 'https://placehold.co/300x180/cccccc/000000?text=Sin+Imagen';
                   }}
                 />
-                
-                {/* Badge de stock */}
-                {product.stock && (
+                {product.stock !== undefined && ( // Mostrar si stock es 0 o más
                   <div style={{
                     position: 'absolute',
                     bottom: '8px',
                     left: '8px',
-                    backgroundColor: 'rgba(52, 211, 153, 0.9)',
+                    backgroundColor: product.stock > 0 ? 'rgba(52, 211, 153, 0.9)' : 'rgba(239, 68, 68, 0.9)', // Rojo si no hay stock
                     color: 'white',
                     padding: '3px 8px',
                     borderRadius: '20px',
@@ -228,12 +291,12 @@ const Menu = () => {
                     fontWeight: '600',
                     backdropFilter: 'blur(2px)'
                   }}>
-                    {product.stock} unidades
+                    {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}
                   </div>
                 )}
               </div>
-        
-              {/* Contenido derecho */}
+
+              {/* Contenido */}
               <div style={{
                 flex: 1,
                 display: 'flex',
@@ -241,7 +304,7 @@ const Menu = () => {
                 justifyContent: 'space-between',
                 padding: '5px 0'
               }}>
-                <div>
+                <div onClick={() => openAddProductModal(product)}> {/* Si quieres que el texto también abra el modal */}
                   <h3 style={{
                     margin: '0 0 8px 0',
                     color: '#1e293b',
@@ -252,56 +315,84 @@ const Menu = () => {
                   }}>
                     {product.nombre}
                   </h3>
-                  
-                  <p style={{ 
+                  <p style={{
                     color: '#64748b',
                     fontSize: '0.85rem',
-                    margin: '0',
+                    margin: '0 0 10px 0', // Espacio antes del precio
                     textAlign: 'left',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    minHeight: 'calc(0.85rem * 1.5 * 2)' // Para mantener altura consistente
                   }}>
                     {product.descripcion || 'Sin descripción disponible'}
                   </p>
                 </div>
-        
-                <div>
-                  <p style={{ 
-                    color: '#10b981', 
+
+                {/* Precio y Botón */}
+                <div style={{ marginTop: 'auto' }}> {/* Empuja esta sección hacia abajo */}
+                  <p style={{
+                    color: '#10b981',
                     fontWeight: '700',
                     fontSize: '1.1rem',
                     margin: '10px 0 15px 0',
                     textAlign: 'left'
                   }}>
-                    ${product.precio?.toLocaleString() || '0'}
+                    ${parseFloat(product.precio)?.toLocaleString() || 'Precio no disponible'}
                   </p>
-                  
-                  <button 
-                    style={{ 
+
+                  <button
+                    onClick={() => manejarAgregarAlCarrito(product)} // Usar la nueva función
+                    disabled={product.stock === 0} // Deshabilitar si no hay stock
+                    style={{
                       width: '100%',
-                      padding: '8px 15px',
+                      padding: '10px 15px', // Un poco más de padding
                       borderRadius: '6px',
                       border: 'none',
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: product.stock === 0 ? '#9ca3af' : '#3b82f6', // Gris si deshabilitado
                       color: 'white',
-                      cursor: 'pointer',
+                      cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
                       fontWeight: '500',
                       transition: 'all 0.2s ease',
-                      ':hover': {
-                        backgroundColor: '#2563eb',
-                        transform: 'scale(1.02)'
+                      // ':hover': { ... } // Ver nota anterior sobre :hover
+                    }}
+                    onMouseEnter={(e) => {
+                      if (product.stock !== 0) {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (product.stock !== 0) {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                        e.currentTarget.style.transform = 'scale(1)';
                       }
                     }}
                   >
-                    Agregar al carrito
+                    {product.stock === 0 ? 'Agotado' : 'Agregar al carrito'}
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      <button
+        onClick={() => setMostrarCarrito(!mostrarCarrito)}
+        style={{ /* Estilos para un botón fijo o en una cabecera */ }}
+      >
+        {mostrarCarrito ? 'Ocultar' : 'Ver'} Orden ({itemsDelCarrito.reduce((acc, item) => acc + item.cantidad, 0)})
+      </button>
+
+      {mostrarCarrito && (
+          <CartModal
+          isOpen={mostrarCarrito} onClose={() => setMostrarCarrito(false)}
+            itemsDelCarrito={itemsDelCarrito}
+            enIncremento={manejarIncrementarCantidad}
+            enReduccion={manejarReducirCantidad}
+          />
       )}
 
       {showAddModal && selectedProduct && (
@@ -333,6 +424,7 @@ const Menu = () => {
         </Modal>
       )}
     </div>
+
   );
 };
 

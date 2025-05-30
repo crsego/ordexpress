@@ -231,11 +231,12 @@ function TableManagementPage() {
               <th>Número Mesa</th>
               <th>Estado Actual</th>
               <th>Actualizar Estado</th>
+              <th>QR</th>
             </tr>
           </thead>
           <tbody>
             {tables.map(table => (
-              <tr key={table.id} onClick={() => openModal(table)}>
+              <tr key={table.id} >
                 <td>Mesa {table.numero}</td>
                 <td>
                   {possibleStatus.find(s => s.value === table.estado)?.label || table.estado}
@@ -252,15 +253,21 @@ function TableManagementPage() {
                   </select>
                   {updatingTableId === table.id && <span style={{ marginLeft: '8px' }}>🔄</span>}
                 </td>
+                <td >
+                <button className="edit-button" onClick={() => openModal(table)}>Editar</button>
+                </td>
               </tr>
             ))}
           </tbody>
-            <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Detalle de Mesa" style={{ content: { width: '400px', margin: 'auto' } }}>
+            <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Detalle de Mesa" style={{ content: { width: '400px', margin: 'auto', height:'420px' } }}>
               {selectedTable && (
                 <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between'}}>
                   <h2>Mesa {selectedTable.numero}</h2>
+                    <button className="delete-button" onClick={closeModal}>X</button>
+                  </div>
                   <p><strong>Estado:</strong> {selectedTable.estado}</p>
-                  <div style={{ marginBottom: '10px', height: '120px' }}>
+                  <div style={{ marginBottom: '10px', height: '250px', justifyItems:'center' }}>
                     {qrCodes[selectedTable.id] ? (
                       <div id={`qr-img-${selectedTable.id}`} dangerouslySetInnerHTML={{ __html: qrCodes[selectedTable.id] }} />
                     ) : (
@@ -275,9 +282,7 @@ function TableManagementPage() {
                       <button className="add-button" onClick={() => downloadQr(selectedTable.id)}>Descargar QR</button>
                     )}
                   </div>
-                  <div style={{ marginTop: '20px' }}>
-                    <button className="cancel-button" onClick={closeModal}>Cerrar</button>
-                  </div>
+                  
                 </div>
               )}
             </Modal>
