@@ -1,199 +1,230 @@
-// // src/components/CartModal.jsx
-// import React, { useState } from 'react';
-
-// const CartModal = ({ cart = [], dispatch, total = 0, formatCurrency = amount => amount }) => {
-//   const [isOpen, setIsOpen] = useState(false);
-
-//   const openModal = () => setIsOpen(true);
-//   const closeModal = () => setIsOpen(false);
-
-//   const modalContent = (
-//     <div style={modalOverlayStyle} onClick={closeModal}>
-//       <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
-//         <div style={headerStyle}>
-//           <h2 style={titleStyle}>Carrito de Compras 🛒</h2>
-//           <button onClick={closeModal} style={closeButtonStyle} aria-label="Cerrar modal">×</button>
-//         </div>
-
-//         {cart.length === 0 ? (
-//           <p style={emptyTextStyle}>No hay productos agregados al carrito.</p>
-//         ) : (
-//           <>
-//             {cart.map(item => (
-//               <div key={item.id} style={itemRowStyle}>
-//                 <div style={{ flexGrow: 1 }}>
-//                   <h4 style={itemNameStyle}>{item.name}</h4>
-//                   <p style={itemPriceStyle}>{formatCurrency(item.price)}</p>
-//                 </div>
-//                 <div style={quantityControlStyle}>
-//                   <button
-//                     onClick={() => dispatch({ type: 'UPDATE_QUANTITY', payload: { id: item.id, quantity: item.quantity - 1 } })}
-//                     style={qtyButtonStyle}
-//                   >-</button>
-//                   <span style={quantityTextStyle}>{item.quantity}</span>
-//                   <button
-//                     onClick={() => dispatch({ type: 'UPDATE_QUANTITY', payload: { id: item.id, quantity: item.quantity + 1 } })}
-//                     style={qtyButtonStyle}
-//                   >+</button>
-//                 </div>
-//                 <div style={itemTotalStyle}>{formatCurrency(item.price * item.quantity)}</div>
-//               </div>
-//             ))}
-
-//             <div style={totalContainerStyle}>
-//               <h3 style={totalTextStyle}>Total: {formatCurrency(total)}</h3>
-//             </div>
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-
-//   return (
-//     <>
-//       <button onClick={openModal} style={fabCartStyle} aria-label="Abrir carrito">
-//         🛒 {cart.length}
-//       </button>
-//       {isOpen && modalContent}
-//     </>
-//   );
-// };
-
-// // Estilos del modal y botón flotante
-// const fabCartStyle = {
-//   position: 'fixed',
-//   bottom: '20px',
-//   right: '20px',
-//   backgroundColor: '#3b82f6',
-//   color: '#fff',
-//   border: 'none',
-//   borderRadius: '50%',
-//   width: '50px',
-//   height: '50px',
-//   fontSize: '1.2rem',
-//   cursor: 'pointer',
-//   zIndex: 1001
-// };
-// const modalOverlayStyle = {
-//   position: 'fixed',
-//   top: 0,
-//   left: 0,
-//   right: 0,
-//   bottom: 0,
-//   backgroundColor: 'rgba(0,0,0,0.5)',
-//   display: 'flex',
-//   alignItems: 'center',
-//   justifyContent: 'center',
-//   zIndex: 1000
-// };
-// const modalContentStyle = {
-//   backgroundColor: '#fff',
-//   padding: '20px',
-//   borderRadius: '8px',
-//   width: '400px',
-//   maxHeight: '80vh',
-//   overflowY: 'auto',
-//   boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
-// };
-// const headerStyle = {
-//   display: 'flex',
-//   justifyContent: 'space-between',
-//   alignItems: 'center',
-//   marginBottom: '15px',
-//   borderBottom: '1px solid #e2e8f0',
-//   paddingBottom: '10px'
-// };
-// const titleStyle = { margin: 0, fontSize: '1.25rem', color: '#1e293b' };
-// const closeButtonStyle = { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' };
-// const emptyTextStyle = { textAlign: 'center', color: '#64748b', fontSize: '0.95rem' };
-// const itemRowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' };
-// const itemNameStyle = { margin: '0 0 5px 0', fontSize: '1rem', color: '#334155' };
-// const itemPriceStyle = { margin: 0, fontSize: '0.85rem', color: '#64748b' };
-// const quantityControlStyle = { display: 'flex', alignItems: 'center', gap: '10px' };
-// const qtyButtonStyle = { padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer', backgroundColor: '#f1f5f9', fontWeight: 'bold' };
-// const quantityTextStyle = { minWidth: '25px', textAlign: 'center', fontSize: '0.95rem' };
-// const itemTotalStyle = { minWidth: '80px', textAlign: 'right', fontWeight: 600, color: '#10b981' };
-// const totalContainerStyle = { marginTop: '20px', textAlign: 'right', borderTop: '2px solid #cbd5e1', paddingTop: '10px' };
-// const totalTextStyle = { margin: 0, fontSize: '1.2rem', color: '#1e293b' };
-
-// export default CartModal;
-
 // src/components/CartModal.jsx
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/url';
 
-const CartModal = ({ isOpen, onClose, itemsDelCarrito = [], enIncremento, enReduccion }) => {
-  if (!isOpen) return null;
+const CartModal = ({ itemsDelCarrito = [], onCartUpdated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localItems, setLocalItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [estadoPedido, setEstadoPedido] = useState('NEW');
+  const [pagado, setPagado] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [userNameError, setUserNameError] = useState('');
+  const pedidoIdRef = useRef(null);
+
+  // Alterna apertura del modal
+  const toggleModal = () => {
+    if (!isOpen) {
+      setLoading(true);
+      setLocalItems([]);
+    }
+    setIsOpen(open => !open);
+  };
+
+  // Carga datos cada vez que se abre
+  useEffect(() => {
+    if (!isOpen) return;
+    const pedidoId = parseInt(localStorage.getItem('pedidoId'), 10);
+    pedidoIdRef.current = pedidoId;
+    if (!isNaN(pedidoId)) {
+      axios.get(`${API_BASE_URL}/api/Pedidos/pedido/${pedidoId}`)
+        .then(({ data }) => {
+          setEstadoPedido(data.estado);
+          setPagado(data.pagado);
+          const detalles = data.detalles.map(d => ({
+            productoId: d.productoId,
+            nombre: d.nombreProducto,
+            precio: d.precioUnitario,
+            cantidad: d.cantidad
+          }));
+          setLocalItems(detalles);
+        })
+        .catch(() => setLocalItems(itemsDelCarrito.map(i => ({ ...i }))))
+        .finally(() => {
+          setDirty(false);
+          setLoading(false);
+        });
+    } else {
+      setLocalItems(itemsDelCarrito.map(i => ({ ...i })));
+      setDirty(false);
+      setLoading(false);
+    }
+  }, [isOpen, itemsDelCarrito]);
 
   const calcularTotal = () =>
-    itemsDelCarrito.reduce(
-      (suma, item) => suma + (parseFloat(item.precio) || 0) * (item.cantidad || 0),
-      0
-    );
+    localItems.reduce((sum, i) => sum + (i.precio || 0) * (i.cantidad || 0), 0);
+
+  const saveChanges = async () => {
+    const pedidoId = pedidoIdRef.current;
+    if (isNaN(pedidoId)) return;
+    await axios.post(`${API_BASE_URL}/api/Pedidos/actualizar-cantidades`, {
+      pedidoId,
+      items: localItems.map(i => ({ productoId: i.productoId, cantidad: i.cantidad }))
+    });
+    setDirty(false);
+    onCartUpdated?.(localItems);
+  };
+
+  const sendOrder = async () => {
+    if (!userName.trim()) {
+      setUserNameError('Campo obligatorio');
+      return;
+    }
+    setUserNameError('');
+    try {
+      const pedidoId = pedidoIdRef.current;
+      const { data } = await axios.post(`${API_BASE_URL}/api/Pedidos/enviar`, { pedidoId, nombreCliente: userName });
+      setEstadoPedido('PENDING');
+      alert(data.message || 'Pedido enviado exitosamente.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al enviar pedido.');
+    }
+  };
+
+  const payOrder = async () => {
+    try {
+      const pedidoId = pedidoIdRef.current;
+      const { data } = await axios.post(`${API_BASE_URL}/api/Pedidos/${pedidoId}/pagar`);
+      setPagado(true);
+      alert(data.message || 'Pedido pagado exitosamente.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al procesar pago.');
+    }
+  };
+
+  const finalize = () => {
+    localStorage.removeItem('pedidoId');
+    localStorage.removeItem('mesaId');
+    localStorage.removeItem('organizationId');
+    setIsOpen(false);
+  };
+
+  const handleClose = async () => {
+    if (dirty) await saveChanges();
+    setIsOpen(false);
+  };
+
+  const changeQty = (id, delta) => {
+    if (pagado) return;
+    setLocalItems(prev => prev.map(i =>
+      i.productoId === id ? { ...i, cantidad: Math.max(0, i.cantidad + delta) } : i
+    ));
+    setDirty(true);
+  };
+
+  // Eliminar item marcándolo con cantidad 0
+  const handleRemoveItem = id => {
+    if (pagado) return;
+    setLocalItems(prev => prev.map(i =>
+      i.productoId === id ? { ...i, cantidad: 0 } : i
+    ));
+    setDirty(true);
+  };
+
+  // Determinar etiqueta y acción del botón principal
+  let mainLabel = 'Guardar';
+  let mainAction = saveChanges;
+  if (pagado) {
+    mainLabel = 'Finalizar'; mainAction = finalize;
+  } else if (!dirty && estadoPedido === 'NEW') {
+    mainLabel = 'Enviar'; mainAction = sendOrder;
+  } else if (!dirty && estadoPedido !== 'NEW' && !pagado) {
+    mainLabel = 'Pagar'; mainAction = payOrder;
+  }
 
   return (
-    <div style={modalOverlayStyle} onClick={onClose}>
-      <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
-        <div style={headerStyle}>
-          <h2 style={titleStyle}>Carrito de Compras 🛒</h2>
-          <button onClick={onClose} style={closeButtonStyle} aria-label="Cerrar modal">×</button>
-        </div>
+    <>
+      {/* Botón flotante */}
+      <button onClick={toggleModal} style={fabStyle}>
+        🛒 {itemsDelCarrito.reduce((sum, i) => sum + i.cantidad, 0)}
+      </button>
 
-        {itemsDelCarrito.length === 0 ? (
-          <p style={emptyTextStyle}>No hay productos en el carrito.</p>
-        ) : (
-          <>
-            {itemsDelCarrito.map(item => (
-              <div key={item.productoId} style={itemRowStyle}>
-                <div style={{ flexGrow: 1 }}>
-                  <h4 style={itemNameStyle}>{item.nombre}</h4>
-                  <p style={itemPriceStyle}>Precio unitario: ${parseFloat(item.precio)?.toLocaleString()}</p>
-                </div>
-                <div style={quantityControlStyle}>
-                  <button onClick={() => enReduccion(item.productoId)} style={qtyButtonStyle}>-</button>
-                  <span style={quantityTextStyle}>{item.cantidad}</span>
-                  <button onClick={() => enIncremento(item.productoId)} style={qtyButtonStyle}>+</button>
-                </div>
-                <div style={itemTotalStyle}>${((parseFloat(item.precio)||0) * item.cantidad).toLocaleString()}</div>
-              </div>
-            ))}
-
-            <div style={totalContainerStyle}>
-              <h3 style={totalTextStyle}>Total: <span style={{ color: '#3b82f6' }}>${calcularTotal().toLocaleString()}</span></h3>
+      {isOpen && (
+        <div style={overlayStyle} onClick={handleClose}>
+          <div style={modalContainerStyle} onClick={e => e.stopPropagation()}>
+            <div style={headerStyle}>
+              <h2 style={titleStyle}>Carrito de Compras 🛒</h2>
+              <button onClick={handleClose} style={closeBtnStyle}>×</button>
             </div>
-          </>
-        )}
-      </div>
-    </div>
+
+            {loading ? (
+              <div style={loadingStyle}>Cargando carrito...</div>
+            ) : (
+              <>
+                <div style={inputContainerStyle}>
+                  <input
+                    type="text"
+                    placeholder="Tu nombre"
+                    value={userName}
+                    onChange={e => { setUserName(e.target.value); if (e.target.value.trim()) setUserNameError(''); }}
+                    disabled={estadoPedido !== 'NEW'}
+                    style={{
+                      ...inputStyle,
+                      borderColor: userNameError ? 'red' : inputStyle.borderColor
+                    }}
+                  />
+                  {userNameError && <span style={errorTextStyle}>{userNameError}</span>}
+                </div>
+
+                <div style={listStyle}>
+                  {localItems.filter(item => item.cantidad > 0).length === 0 ? (
+                    <p style={emptyStyle}>No hay productos.</p>
+                  ) : (
+                    localItems.filter(item => item.cantidad > 0).map(item => (
+                      <div key={item.productoId} style={rowStyle}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <h4 style={nameStyle}>{item.nombre}</h4>
+                          <p style={priceStyle}>${item.precio.toLocaleString()}</p>
+                        </div>
+                        <div style={qtyCtrlStyle}>
+                          <button onClick={() => changeQty(item.productoId, -1)} style={qtyBtn} disabled={pagado}>-</button>
+                          <span style={qtyText}>{item.cantidad}</span>
+                          <button onClick={() => changeQty(item.productoId, 1)} style={qtyBtn} disabled={pagado}>+</button>
+                        </div>
+                        <div style={itemTotalStyle}>${(item.precio * item.cantidad).toLocaleString()}</div>
+                        <button onClick={() => handleRemoveItem(item.productoId)} style={removeBtnStyle}>×</button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div style={footerStyle}>
+                  <h3>Total: ${calcularTotal().toLocaleString()}</h3>
+                  <button onClick={mainAction} style={saveBtn}>{mainLabel}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
-const modalOverlayStyle = {
-  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-  alignItems: 'center', justifyContent: 'center', zIndex: 1000
-};
-const modalContentStyle = {
-  backgroundColor: '#fff', padding: '20px', borderRadius: '8px',
-  width: '400px', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
-};
-const headerStyle = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'
-};
-const titleStyle = { margin: 0, fontSize: '1.25rem', color: '#1e293b' };
-const closeButtonStyle = { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' };
-const emptyTextStyle = { textAlign: 'center', color: '#64748b', fontSize: '0.95rem' };
-const itemRowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' };
-const itemNameStyle = { margin: '0 0 5px 0', color: '#334155', fontSize: '0.95rem' };
-const itemPriceStyle = { margin: 0, fontSize: '0.8rem', color: '#64748b' };
-const quantityControlStyle = { display: 'flex', alignItems: 'center', gap: '12px' };
-const qtyButtonStyle = {
-  padding: '6px 10px', cursor: 'pointer', backgroundColor: '#f1f5f9',
-  border: '1px solid #e2e8f0', color: '#334155', borderRadius: '4px', fontWeight: 'bold'
-};
-const quantityTextStyle = { fontSize: '0.9rem', color: '#1e293b', minWidth: '20px', textAlign: 'center' };
-const itemTotalStyle = { minWidth: '90px', textAlign: 'right', fontWeight: 600, color: '#10b981', fontSize: '0.95rem' };
-const totalContainerStyle = { marginTop: '25px', textAlign: 'right', borderTop: '2px solid #cbd5e1', paddingTop: '20px' };
-const totalTextStyle = { margin: 0, color: '#1e293b', fontSize: '1.2rem' };
+// Estilos
+const fabStyle = { position:'fixed', bottom:'20px', right:'20px', backgroundColor:'#3b82f6', color:'#fff', border:'none', borderRadius:'50%', width:'50px', height:'50px', fontSize:'1.2rem', cursor:'pointer', zIndex:1001 };
+const overlayStyle = { position:'fixed', top:0,left:0,right:0,bottom:0, backgroundColor:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 };
+const modalContainerStyle = { background:'#fff', padding:'20px', borderRadius:'8px', width:'90%', maxWidth:'400px', height:'90vh', display:'flex', flexDirection:'column', boxShadow:'0 2px 10px rgba(0,0,0,0.3)' };
+const loadingStyle = { textAlign:'center', flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'#64748b' };
+const headerStyle = { display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #e2e8f0', paddingBottom:'10px', marginBottom:'15px' };
+const titleStyle = { margin:0, color:'#1e293b' };
+const closeBtnStyle = { background:'none', border:'none', fontSize:'1.5rem', cursor:'pointer', color:'#64748b' };
+const inputContainerStyle = { marginBottom:'15px' };
+const inputStyle = { width:'100%', padding:'8px', border:'1px solid #cbd5e1', borderRadius:'4px' };
+const errorTextStyle = { color:'red', fontSize:'0.75rem', marginTop:'4px' };
+const listStyle = { flex:1, overflowY:'auto', paddingRight:'4px' };
+const emptyStyle = { textAlign:'center', color:'#64748b', margin:'20px 0' };
+const rowStyle = { display:'flex', alignItems:'center', justifyContent:'flex-start', gap:'12px', marginBottom:'15px', borderBottom:'1px solid #f1f5f9', paddingBottom:'10px' };
+const removeBtnStyle = { background:'none', border:'none', color:'#e53e3e', fontSize:'1.2rem', cursor:'pointer' };
+const nameStyle = { margin:0, fontSize:'0.95rem', color:'#334155' };
+const priceStyle = { margin:0, fontSize:'0.8rem', color:'#64748b' };
+const qtyCtrlStyle = { display:'flex', alignItems:'center', gap:'8px' };
+const qtyBtn = { padding:'6px 10px', border:'1px solid #e2e8f0', borderRadius:'4px', background:'#f1f5f9', cursor:'pointer' };
+const qtyText = { minWidth:'20px', textAlign:'center' };
+const itemTotalStyle = { fontWeight:'600', color:'#10b981' };
+const footerStyle = { display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:'2px solid #cbd5e1', paddingTop:'15px', marginTop:'10px' };
+const saveBtn = { padding:'8px 16px', background:'#3b82f6', color:'#fff', border:'none', borderRadius:'4px', cursor:'pointer' };
 
 export default CartModal;
