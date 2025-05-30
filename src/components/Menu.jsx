@@ -38,7 +38,7 @@ const Menu = () => {
     sidebar: { position: 'fixed', top: 0, left: showFilterMenu ? 0 : '-260px', width: '250px', height: '100vh', background: '#fff', boxShadow: '2px 0 8px rgba(0,0,0,0.2)', paddingTop: '60px', display: 'flex', flexDirection: 'column', transition: 'left 0.3s', zIndex: 1000 },
     sidebarItem: { background: 'none', border: 'none', textAlign: 'left', padding: '12px 20px', fontSize: '1rem', cursor: 'pointer' },
     overlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 999 },
-    card: { maxWidth: isMobile ? '100%' : '320px', margin: '10px auto' },
+    card: { maxWidth: isMobile ? '100%' : '260px', width: isMobile ? '100%' : '280px', height: '320px', display: 'flex', flexDirection: 'column', margin: '3px auto' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px,1fr))', gap: '20px', marginLeft: isMobile && showFilterMenu ? '270px' : '0' }
   };
 
