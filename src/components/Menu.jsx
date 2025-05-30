@@ -132,7 +132,7 @@ const Menu = () => {
     console.log(pedidoId)
     if (!pedidoId) return alert('No hay un pedido activo.');
     try {
-      const { data } = await axios.get(`${base_url}/api/Pedidos/${pedidoId}`);
+      const { data } = await axios.get(`${base_url}/api/Pedidos/pedido/${pedidoId}`);
       const detalles = data.detalles.map(d => ({
         productoId: d.productoId,
         nombre: d.nombreProducto,
