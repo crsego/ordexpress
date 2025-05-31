@@ -13,9 +13,11 @@ function OrderManagementPage() {
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
   const [notification, setNotification] = useState({ message: '', type: '' });
+
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const base_url = API_BASE_URL;
+
+  const default_url = API_BASE_URL;
 
   const statusToNumberMap = useMemo(() => ({
     // La opción 'TODOS' en el select de filtro del frontend no se mapea a un número de enum
@@ -69,7 +71,7 @@ function OrderManagementPage() {
     }
 
     try {
-      let url = `${base_url}/organization${organizationId}/listar`;
+      let url = `${default_url}/organization${organizationId}/listar`;
 
       // Solo añadir el parámetro 'estado' si filterStatus no es vacío (que es la opción "Todos")
       // y si existe en el mapeo de estados.
@@ -109,7 +111,7 @@ function OrderManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [base_url, filterStatus, statusToNumberMap, numberToStatusMap, showNotification]);
+  }, [default_url, filterStatus, statusToNumberMap, numberToStatusMap, showNotification]);
 
   useEffect(() => {
     fetchOrders();
@@ -133,7 +135,7 @@ function OrderManagementPage() {
     );
 
     try {
-      const url = `${base_url}/api/Pedidos/cambiar-estado`;
+      const url = `${default_url}/api/Pedidos/cambiar-estado`;
       const payload = { pedidoId: orderId, nuevoEstado: newStatusNumber };
 
       const authToken = localStorage.getItem('authToken');
@@ -149,13 +151,13 @@ function OrderManagementPage() {
       showNotification(errorMessage, "error");
       setOrders(originalOrders);
     }
-  }, [base_url, statusToNumberMap, showNotification, orders]);
+  }, [default_url, statusToNumberMap, showNotification, orders]);
 
   const fetchOrderDetails = useCallback(async (orderId) => {
     setLoading(true);
     setError(null);
     try {
-      const url = `${base_url}/api/Pedidos/${orderId}`;
+      const url = `${default_url}/api/Pedidos/pedido/${orderId}`;
 
       const authToken = localStorage.getItem('authToken');
       const config = authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : {};
@@ -189,7 +191,7 @@ function OrderManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [base_url, numberToStatusMap, showNotification]);
+  }, [default_url, numberToStatusMap, showNotification]);
 
   // Filtra los pedidos según el estado seleccionado (se recalcula solo cuando cambian 'orders' o 'filterStatus')
   const filteredOrders = useMemo(() => {

@@ -22,7 +22,7 @@ const Menu = () => {
 
   useEffect(() => {
     const token = query.get("token");
-    
+    //
 
     if (token && !localStorage.getItem("mesaId")) {
       setLoadingToken(true);
